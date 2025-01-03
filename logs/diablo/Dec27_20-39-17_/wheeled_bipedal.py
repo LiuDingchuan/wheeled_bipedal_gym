@@ -241,7 +241,6 @@ class WheeledBipedal(BaseTask):
             1] * self.dof_vel[:, [1, 4]]
         return L0_dot, theta0_dot
 
-    # 检查是否结束当前envs
     def check_termination(self):
         """Check if environments need to be reset"""
         fail_buf = torch.any(
@@ -374,7 +373,6 @@ class WheeledBipedal(BaseTask):
             self.rew_buf += rew
             self.episode_sums["termination"] += rew
 
-    # 本体感受状态观测值
     def compute_proprioception_observations(self):
         # note that observation noise need to modified accordingly !!!
         # Let the wheel pos to be zero!!!!
@@ -392,8 +390,7 @@ class WheeledBipedal(BaseTask):
             dim=-1,
         )
         return obs_buf
-    
-    # 计算obs的值（同时包括噪声）
+
     def compute_observations(self):
         """Computes observations"""
         self.obs_buf = self.compute_proprioception_observations()
@@ -437,7 +434,6 @@ class WheeledBipedal(BaseTask):
             dim=-1,
         )
 
-    # 环境基础设置和地形创建
     def create_sim(self):
         """Creates simulation, terrain and evironments"""
         self.up_axis_idx = 2  # 2 for z, 1 for y -> adapt gravity accordingly
@@ -1287,7 +1283,6 @@ class WheeledBipedal(BaseTask):
         self.height_samples = (torch.tensor(self.terrain.heightsamples).view(
             self.terrain.tot_rows, self.terrain.tot_cols).to(self.device))
 
-    # 创建机器人实体（同时加载实体相关的随机化domain_rand）
     def _create_envs(self):
         """Creates environments:
         1. loads the robot URDF/MJCF asset,
