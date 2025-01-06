@@ -1,0 +1,29 @@
+# 日志文件
+*.log
+logs/
+tensorboard_logs/
+
+# 检查点文件（用于保存模型状态，不同框架命名可能不同）
+*.ckpt
+*.ckpt.meta
+*.ckpt.index
+checkpoints/
+model_checkpoints/
+
+# 临时文件
+*.tmp
+__pycache__/
+
+# 数据预处理生成的中间文件
+preprocessed_data/
+intermediate_data/
+
+# 环境特定文件（如 conda 环境文件）
+*.yaml
+*.yml
+environment.yml
+requirements.txt
+
+# 操作系统自动生成的文件
+.DS_Store
+Thumbs.db
