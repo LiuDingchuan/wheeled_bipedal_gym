@@ -30,11 +30,14 @@
 
 from wheeled_bipedal_gym import WHEELED_BIPEDAL_GYM_ROOT_DIR, WHEELED_BIPEDAL_GYM_ENVS_DIR
 
-from .base.wheeled_bipedal import WheeledBipedal
+# from .base.wheeled_bipedal import WheeledBipedal
 from .diablo.diablo_config import DiabloCfg, DiabloCfgPPO
 
 from .diablo_vmc.diablo_vmc import DiabloVMC
 from .diablo_vmc.diablo_vmc_config import DiabloVMCCfg, DiabloVMCCfgPPO
+
+from .diablo_plus.diablo_plus import WheeledBipedal
+from .diablo_plus.diablo_plus_config import DiabloPlusCfg, DiabloPlusCfgPPO
 
 import os
 
@@ -43,3 +46,5 @@ from wheeled_bipedal_gym.utils.task_registry import task_registry
 task_registry.register("diablo", WheeledBipedal, DiabloCfg(), DiabloCfgPPO())
 task_registry.register("diablo_vmc", DiabloVMC, DiabloVMCCfg(),
                        DiabloVMCCfgPPO())
+task_registry.register("diablo_plus", WheeledBipedal, DiabloPlusCfg(), DiabloPlusCfgPPO())
+

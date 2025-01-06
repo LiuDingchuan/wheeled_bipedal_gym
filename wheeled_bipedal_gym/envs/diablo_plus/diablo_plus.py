@@ -915,16 +915,11 @@ class WheeledBipedal(BaseTask):
         noise_scales = self.cfg.noise.noise_scales
         noise_level = self.cfg.noise.noise_level
 
-        noise_vec[:
-                  3] = noise_scales.ang_vel * noise_level * self.obs_scales.ang_vel
+        noise_vec[: 3] = noise_scales.ang_vel * noise_level * self.obs_scales.ang_vel
         noise_vec[3:6] = noise_scales.gravity * noise_level
         noise_vec[6:8] = 0.0  # commands
-        noise_vec[
-            8:
-            14] = noise_scales.dof_pos * noise_level * self.obs_scales.dof_pos
-        noise_vec[
-            14:
-            20] = noise_scales.dof_vel * noise_level * self.obs_scales.dof_vel
+        noise_vec[8:14] = noise_scales.dof_pos * noise_level * self.obs_scales.dof_pos
+        noise_vec[14:20] = noise_scales.dof_vel * noise_level * self.obs_scales.dof_vel
         noise_vec[20:26] = 0.0  # previous actions
         if self.cfg.terrain.measure_heights:
             noise_vec[48:235] = (noise_scales.height_measurements *

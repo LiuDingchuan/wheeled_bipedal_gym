@@ -28,28 +28,16 @@
 #
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 
-from wheeled_bipedal_gym.envs.base.base_config import BaseConfig
+from wheeled_bipedal_gym.envs.base.wheeled_bipedal_config import WheeledBipedalCfg, WheeledBipedalCfgPPO
 
 
-class WheeledBipedalCfg(BaseConfig):
-
-    class env:
-        num_envs = 4096
-        num_observations = 27
-        num_privileged_obs = (
-                num_observations + 7 * 11 + 3 + 6 * 5 + 3 + 3
-        )  # if not None a priviledge_obs_buf will be returned by step() (critic obs for assymetric training). None is returned otherwise
-        obs_history_length = 5  # number of observations stacked together
-        obs_history_dec = 1
-        num_actions = 6
-        env_spacing = 3.0  # not used with heightfields/trimeshes
-        send_timeouts = True  # send time out information to the algorithm
-        episode_length_s = 20  # episode length in seconds
-        dof_vel_use_pos_diff = True
-        fail_to_terminal_time_s = 1
-
-    class terrain:
+class DiabloPlusCfg(WheeledBipedalCfg):
+    class env(WheeledBipedalCfg.env):
+        num_envs = 1024
+    # 设置地形参数
+    class terrain(WheeledBipedalCfg.terrain):
         mesh_type = "plane"
+        # mesh_type = "trimesh"
         # mesh_type = "trimesh"  # "heightfield" # none, plane, heightfield or trimesh
         horizontal_scale = 0.1  # [m]
         vertical_scale = 0.005  # [m]
@@ -87,9 +75,9 @@ class WheeledBipedalCfg(BaseConfig):
         slope_treshold = (
             0.75  # slopes above this threshold will be corrected to vertical surfaces
         )
-
-    class commands:
-        curriculum = True
+    
+    class commands(WheeledBipedalCfg.commands):
+        curriculum = False
         basic_max_curriculum = 2.5
         advanced_max_curriculum = 1.5
         curriculum_threshold = 0.7
@@ -97,63 +85,51 @@ class WheeledBipedalCfg(BaseConfig):
         resampling_time = 5.0  # time before command are changed[s]
         heading_command = True  # if true: compute ang vel command from heading error
 
-        class ranges:
-            lin_vel_x = [-5.0, 5.0]  # min max [m/s]
-            ang_vel_yaw = [-3.14, 3.14]  # min max [rad/s]
-            height = [0.18, 0.35]
-            heading = [-3.14, 3.14]
-
-    class init_state:
-        pos = [0.0, 0.0, 0.3]  # x,y,z [m]
-        rot = [0.0, 0.0, 0.0, 1.0]  # x,y,z,w [quat]
-        lin_vel = [0.0, 0.0, 0.0]  # x,y,z [m/s]
-        ang_vel = [0.0, 0.0, 0.0]  # x,y,z [rad/s]
+        class ranges(WheeledBipedalCfg.commands.ranges):
+            lin_vel_x = [-0.01, 0.01]  # min max [m/s]
+            ang_vel_yaw = [-0.01, 0.01]  # min max [rad/s]
+            height = [0.15, 0.35]
+            heading = [-0.01, 0.01]
+    # 定义机器人的初始离地位姿 & 初始线速度角速度和default_joint_angles
+    class init_state(WheeledBipedalCfg.init_state):
+        pos = [0.0, 0.0, 0.25]  # x,y,z [m]
         default_joint_angles = {  # target angles when action = 0.0
-            "joint_a": 0.0,
-            "joint_b": 0.0,
-        }
-
-    class control:
+            "left_hip_joint": 0.0,
+            "left_knee_joint": 0.0,
+            "left_wheel_joint": 0.0,
+            "right_hip_joint": 0.0,
+            "right_knee_joint": 0.0,
+            "right_wheel_joint": 0.0,
+        } # 这个要和urdf内部的joint对应，并且其顺序决定了joint的顺序
+        
+    #底层控制器的选取和PD参数的设置
+    class control(WheeledBipedalCfg.control):
         control_type = "P"  # P: position, V: velocity, T: torques
         # PD Drive parameters:
         stiffness = {"hip": 30.0, "knee": 40.0, "wheel": 0}  # [N*m/rad]
-        damping = {"hip": 0.5, "knee": 0.7, "wheel": 0.3}  # [N*m*s/rad]
+        damping = {"hip": 0.4, "knee": 0.5, "wheel": 0.6}  # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.5
         # decimation: Number of control action updates @ sim DT per policy DT
-        decimation = 2
+        decimation = 2 #它表示每个仿真间隔dt内policy的更新次数，它和sim里面的dt联合决定了这个控制模型的频率。为dt*decimation
         pos_action_scale = 0.5
         vel_action_scale = 10.0
         feedforward_force = 60.0
-
-    class asset:
-        file = ""
-        name = "wheeled_bipedal"
+    #定义机器人模型内容，例如URDF和一些上下限
+    class asset(WheeledBipedalCfg.asset):
+        file = "{WHEELED_BIPEDAL_GYM_ROOT_DIR}/resources/robots/diablo_plus_urdf/urdf/diablo_plus.urdf"
+        name = "diablo_plus"
         offset = 0.
-        l1 = 0.
-        l2 = 0.
-        penalize_contacts_on = []
-        terminate_after_contacts_on = []
-        self_collisions = 1  # 1 to disable, 0 to enable...bitwise filter
-        flip_visual_attachments = False
-        foot_name = "None"  # name of the feet bodies, used to index body state and contact force tensors
-        disable_gravity = False
-        collapse_fixed_joints = True  # merge bodies connected by fixed joints. Specific fixed joints can be kept by adding " <... dont_collapse="true">
-        fix_base_link = False  # fixe the base of the robot
-        default_dof_drive_mode = 3  # see GymDofDriveModeFlags (0 is none, 1 is pos tgt, 2 is vel tgt, 3 effort)
-        replace_cylinder_with_capsule = True  # replace collision cylinders with capsules, leads to faster/more stable simulation
-
-        density = 0.001
-        angular_damping = 0.0
-        linear_damping = 0.0
-        max_angular_velocity = 1000.0
-        max_linear_velocity = 1000.0
-        armature = 0.0
-        thickness = 0.01
-
-    class domain_rand:
+        l1 = 0.14
+        l2 = 0.14
+        penalize_contacts_on = ["left_hip", "left_knee", "right_hip", "right_knee", "base_link"] # 碰到地面会收到惩罚的name of Link
+        terminate_after_contacts_on = ["base_link"] # 碰到地面达到一定条件（接触力&时间）后会直接提前结束当前轮的envs
+    
+    # 通过增加各种随机值来增加机器人的鲁棒性，
+    # 例如随机地面摩擦力，随机机器人质量，质心位置，随机push机器人等。
+    class domain_rand(WheeledBipedalCfg.domain_rand):
         randomize_friction = True
-        friction_range = [0.1, 2.0]
+        friction_range = [0.2, 2.0]
         randomize_restitution = True
         restitution_range = [0.0, 1.0]
         randomize_base_mass = True
@@ -176,32 +152,33 @@ class WheeledBipedalCfg(BaseConfig):
         randomize_action_delay = True
         delay_ms_range = [0, 10]
 
-    class rewards:
+    class rewards(WheeledBipedalCfg.rewards):
 
-        class scales:
+        class scales(WheeledBipedalCfg.rewards.scales):
             tracking_lin_vel = 1.0
             tracking_lin_vel_enhance = 1
             tracking_ang_vel = 1.0
 
-            base_height = 5.0
-            nominal_state = -0.1
+            base_height = 1.2
+            base_height_enhance = 1
+            nominal_state = -0.5
             lin_vel_z = -2.0
             ang_vel_xy = -0.05
             orientation = -200.0
 
             dof_vel = -5e-5
             dof_acc = -2.5e-7
-            torques = -0.001
+            torques = -1e-5
             action_rate = -0.03
             action_smooth = -0.03
 
-            collision = -1.0
+            collision = -1000.0
             dof_pos_limits = -1.0
+            dof_vel_limits = -1.0
 
             theta_limit = -0.01
             same_l = 0.1e-5
-            wheel_vel = -0.1
-            # block_l = 400
+            wheel_vel = -5e-1
 
         only_positive_rewards = False  # if true negative total rewards are clipped at zero (avoids early termination problems)
         clip_single_reward = 1
@@ -211,12 +188,11 @@ class WheeledBipedalCfg(BaseConfig):
         )
         soft_dof_vel_limit = 1.0
         soft_torque_limit = 1.0
-        base_height_target = 0.25
         max_contact_force = 100.0  # forces above this value are penalized
 
-    class normalization:
+    class normalization(WheeledBipedalCfg.normalization):
 
-        class obs_scales:
+        class obs_scales(WheeledBipedalCfg.normalization.obs_scales):
             lin_vel = 10.0
             ang_vel = 0.25
             dof_pos = 1.0
@@ -228,11 +204,11 @@ class WheeledBipedalCfg(BaseConfig):
         clip_observations = 100.0
         clip_actions = 100.0
 
-    class noise:
+    class noise(WheeledBipedalCfg.noise):
         add_noise = True
         noise_level = 0.5  # scales other values
 
-        class noise_scales:
+        class noise_scales(WheeledBipedalCfg.noise.noise_scales):
             dof_pos = 0.1
             dof_vel = 1.5
             lin_vel = 0.1
@@ -241,83 +217,7 @@ class WheeledBipedalCfg(BaseConfig):
             height_measurements = 0.1
 
     # viewer camera:
-    class viewer:
-        ref_env = 0
-        pos = [0, -2, 1]  # [m]
-        lookat = [0, 0, 0]  # [m]
-
-    class sim:
-        dt = 0.005
-        substeps = 1
-        gravity = [0.0, 0.0, -9.81]  # [m/s^2]
-        up_axis = 1  # 0 is y, 1 is z
-
-        class physx:
-            num_threads = 10
-            solver_type = 1  # 0: pgs, 1: tgs
-            num_position_iterations = 4
-            num_velocity_iterations = 0
-            contact_offset = 0.01  # [m]
-            rest_offset = 0.0  # [m]
-            bounce_threshold_velocity = 0.5  # 0.5 [m/s]
-            max_depenetration_velocity = 1.0
-            max_gpu_contact_pairs = 2**23  # 2**24 -> needed for 8000 envs and more
-            default_buffer_size_multiplier = 5
-            contact_collection = (
-                2  # 0: never, 1: last sub-step, 2: all sub-steps (default=2)
-            )
-
-
-class WheeledBipedalCfgPPO(BaseConfig):
-    seed = 1
-    runner_class_name = "OnPolicyRunner"
-
-    class policy:
-        init_noise_std = 0.5
-        actor_hidden_dims = [128, 64, 32]
-        critic_hidden_dims = [256, 128, 64]
-        activation = "elu"  # can be elu, relu, selu, crelu, lrelu, tanh, sigmoid
-
-        # only for ActorCriticSequence
-        num_encoder_obs = (WheeledBipedalCfg.env.obs_history_length *
-                           WheeledBipedalCfg.env.num_observations)
-        latent_dim = 3  # at least 3 to estimate base linear velocity
-        encoder_hidden_dims = [128, 64]
-
-    class algorithm:
-        # training params
-        value_loss_coef = 1.0
-        use_clipped_value_loss = True
-        clip_param = 0.2
-        entropy_coef = 0.01
-        num_learning_epochs = 5
-        num_mini_batches = 4  # mini batch size = num_envs*nsteps / nminibatches
-        learning_rate = 1.0e-3  # 5.e-4
-        schedule = "adaptive"  # could be adaptive, fixed
-        gamma = 0.99
-        lam = 0.95
-        desired_kl = 0.005
-        max_grad_norm = 1.0
-
-        extra_learning_rate = 1e-3
-
-    class runner:
-        # policy_class_name = (
-        #     "ActorCriticSequence"  # could be ActorCritic, ActorCriticSequence
-        # )
-        policy_class_name = (
-            "ActorCritic"  # could be ActorCritic, ActorCriticSequence
-        )
-        algorithm_class_name = "PPO"
-        num_steps_per_env = 48  # per iteration
-        max_iterations = 50000  # number of policy updates
-
+class DiabloPlusCfgPPO(WheeledBipedalCfgPPO):
+    class runner(WheeledBipedalCfgPPO.runner):
         # logging
-        save_interval = 100  # check for potential saves every this many iterations
-        experiment_name = "wheeled_bipedal"
-        run_name = ""
-        # load and resume
-        resume = False
-        load_run = -1  # -1 = last run
-        checkpoint = -1  # -1 = last saved model
-        resume_path = None  # updated from load_run and chkpt
+        experiment_name = "diablo_plus"
