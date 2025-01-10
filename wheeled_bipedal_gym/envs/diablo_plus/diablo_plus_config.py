@@ -28,15 +28,19 @@
 #
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 
-from wheeled_bipedal_gym.envs.base.wheeled_bipedal_config import WheeledBipedalCfg, WheeledBipedalCfgPPO
+from wheeled_bipedal_gym.envs.base.wheeled_bipedal_config import (
+    WheeledBipedalCfg,
+    WheeledBipedalCfgPPO,
+)
 
 
 class DiabloPlusCfg(WheeledBipedalCfg):
     class env(WheeledBipedalCfg.env):
         num_envs = 1024
+
     # 设置地形参数
     class terrain(WheeledBipedalCfg.terrain):
-        mesh_type = "plane"
+        mesh_type = "trimesh"
         # mesh_type = "trimesh"
         # mesh_type = "trimesh"  # "heightfield" # none, plane, heightfield or trimesh
         horizontal_scale = 0.1  # [m]
@@ -75,7 +79,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
         slope_treshold = (
             0.75  # slopes above this threshold will be corrected to vertical surfaces
         )
-    
+
     class commands(WheeledBipedalCfg.commands):
         curriculum = False
         basic_max_curriculum = 2.5
@@ -86,13 +90,15 @@ class DiabloPlusCfg(WheeledBipedalCfg):
         heading_command = True  # if true: compute ang vel command from heading error
 
         class ranges(WheeledBipedalCfg.commands.ranges):
-            lin_vel_x = [-0.01, 0.01]  # min max [m/s]
+            lin_vel_x = [0, 1.5]  # min max [m/s]
             ang_vel_yaw = [-0.01, 0.01]  # min max [rad/s]
-            height = [0.15, 0.35]
-            heading = [-0.01, 0.01]
+            height = [0.15, 0.32]
+            heading = [-0.2, 0.2]
+
     # 定义机器人的初始离地位姿 & 初始线速度角速度和default_joint_angles
     class init_state(WheeledBipedalCfg.init_state):
         pos = [0.0, 0.0, 0.25]  # x,y,z [m]
+        rot = [0.0, 0.0, 0.707107, 0.707107]  # x,y,z,w [quat]
         default_joint_angles = {  # target angles when action = 0.0
             "left_hip_joint": 0.0,
             "left_knee_joint": 0.0,
@@ -100,31 +106,55 @@ class DiabloPlusCfg(WheeledBipedalCfg):
             "right_hip_joint": 0.0,
             "right_knee_joint": 0.0,
             "right_wheel_joint": 0.0,
-        } # 这个要和urdf内部的joint对应，并且其顺序决定了joint的顺序
-        
-    #底层控制器的选取和PD参数的设置
+        }  # 这个要和urdf内部的joint对应，并且其顺序决定了joint的顺序
+
+    # 底层控制器的选取和PD参数的设置
     class control(WheeledBipedalCfg.control):
         control_type = "P"  # P: position, V: velocity, T: torques
         # PD Drive parameters:
-        stiffness = {"hip": 30.0, "knee": 40.0, "wheel": 0}  # [N*m/rad]
-        damping = {"hip": 0.4, "knee": 0.5, "wheel": 0.6}  # [N*m*s/rad]
+        stiffness = {
+            "left_hip": 30.0,
+            "left_knee": 40.0,
+            "left_wheel": 0,
+            "right_hip": 30.0,
+            "right_knee": 40.0,
+            "right_wheel": 0,
+        }  # [N*m/rad]
+        damping = {
+            "left_hip": 0.4,
+            "left_knee": 0.5,
+            "left_wheel": 0.6,
+            "right_hip": 0.4,
+            "right_knee": 0.5,
+            "right_wheel": 0.6,
+        }  # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.5
         # decimation: Number of control action updates @ sim DT per policy DT
-        decimation = 2 #它表示每个仿真间隔dt内policy的更新次数，它和sim里面的dt联合决定了这个控制模型的频率。为dt*decimation
+        decimation = 2  # 它表示每个仿真间隔dt内policy的更新次数，它和sim里面的dt联合决定了这个控制模型的频率。为dt*decimation
         pos_action_scale = 0.5
         vel_action_scale = 10.0
         feedforward_force = 60.0
-    #定义机器人模型内容，例如URDF和一些上下限
+
+    # 定义机器人模型内容，例如URDF和一些上下限
     class asset(WheeledBipedalCfg.asset):
         file = "{WHEELED_BIPEDAL_GYM_ROOT_DIR}/resources/robots/diablo_plus_urdf/urdf/diablo_plus.urdf"
         name = "diablo_plus"
-        offset = 0.
+        offset = 0.0
         l1 = 0.14
         l2 = 0.14
-        penalize_contacts_on = ["left_hip", "left_knee", "right_hip", "right_knee", "base_link"] # 碰到地面会收到惩罚的name of Link
-        terminate_after_contacts_on = ["base_link"] # 碰到地面达到一定条件（接触力&时间）后会直接提前结束当前轮的envs
-    
+        self_collisions = 0  # 1 disable; 0 enable
+        penalize_contacts_on = [
+            "left_hip",
+            "left_knee",
+            "right_hip",
+            "right_knee",
+            "base_link",
+        ]  # 碰到地面会收到惩罚的name of Link
+        terminate_after_contacts_on = [
+            "base_link"
+        ]  # 碰到地面达到一定条件（接触力&时间）后会直接提前结束当前轮的envs
+
     # 通过增加各种随机值来增加机器人的鲁棒性，
     # 例如随机地面摩擦力，随机机器人质量，质心位置，随机push机器人等。
     class domain_rand(WheeledBipedalCfg.domain_rand):
@@ -159,7 +189,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
             tracking_lin_vel_enhance = 1
             tracking_ang_vel = 1.0
 
-            base_height = 1.2
+            base_height = 1
             base_height_enhance = 1
             nominal_state = -0.5
             lin_vel_z = -2.0
@@ -217,6 +247,8 @@ class DiabloPlusCfg(WheeledBipedalCfg):
             height_measurements = 0.1
 
     # viewer camera:
+
+
 class DiabloPlusCfgPPO(WheeledBipedalCfgPPO):
     class runner(WheeledBipedalCfgPPO.runner):
         # logging

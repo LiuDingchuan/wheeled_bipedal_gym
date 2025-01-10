@@ -28,4 +28,4 @@ requirements.txt
 .DS_Store
 Thumbs.db
 
-.egg-info
+wheeled_bipedal_gym.egg-info
