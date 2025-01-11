@@ -40,7 +40,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
 
     # 设置地形参数
     class terrain(WheeledBipedalCfg.terrain):
-        mesh_type = "trimesh"
+        mesh_type = "plane"
         # mesh_type = "trimesh"
         # mesh_type = "trimesh"  # "heightfield" # none, plane, heightfield or trimesh
         horizontal_scale = 0.1  # [m]
@@ -90,15 +90,15 @@ class DiabloPlusCfg(WheeledBipedalCfg):
         heading_command = True  # if true: compute ang vel command from heading error
 
         class ranges(WheeledBipedalCfg.commands.ranges):
-            lin_vel_x = [0, 1.5]  # min max [m/s]
-            ang_vel_yaw = [-0.01, 0.01]  # min max [rad/s]
+            lin_vel_x = [-1.2, 1.2]  # min max [m/s]
+            ang_vel_yaw = [-0.5, 0.5]  # min max [rad/s]
             height = [0.15, 0.32]
             heading = [-0.2, 0.2]
 
     # 定义机器人的初始离地位姿 & 初始线速度角速度和default_joint_angles
     class init_state(WheeledBipedalCfg.init_state):
         pos = [0.0, 0.0, 0.25]  # x,y,z [m]
-        rot = [0.0, 0.0, 0.707107, 0.707107]  # x,y,z,w [quat]
+        rot = [0.0, 0.0, 0, 1.0]  # x,y,z,w [quat]
         default_joint_angles = {  # target angles when action = 0.0
             "left_hip_joint": 0.0,
             "left_knee_joint": 0.0,
@@ -140,16 +140,16 @@ class DiabloPlusCfg(WheeledBipedalCfg):
     class asset(WheeledBipedalCfg.asset):
         file = "{WHEELED_BIPEDAL_GYM_ROOT_DIR}/resources/robots/diablo_plus_urdf/urdf/diablo_plus.urdf"
         name = "diablo_plus"
+        foot_name = "wheel"
         offset = 0.0
-        l1 = 0.14
-        l2 = 0.14
+        l1 = 0.2
+        l2 = 0.2
         self_collisions = 0  # 1 disable; 0 enable
         penalize_contacts_on = [
             "left_hip",
             "left_knee",
             "right_hip",
             "right_knee",
-            "base_link",
         ]  # 碰到地面会收到惩罚的name of Link
         terminate_after_contacts_on = [
             "base_link"
@@ -185,16 +185,16 @@ class DiabloPlusCfg(WheeledBipedalCfg):
     class rewards(WheeledBipedalCfg.rewards):
 
         class scales(WheeledBipedalCfg.rewards.scales):
-            tracking_lin_vel = 1.0
+            tracking_lin_vel = 8.0
             tracking_lin_vel_enhance = 1
-            tracking_ang_vel = 1.0
+            tracking_ang_vel = 0.5
 
             base_height = 1
             base_height_enhance = 1
             nominal_state = -0.5
             lin_vel_z = -2.0
             ang_vel_xy = -0.05
-            orientation = -200.0
+            orientation = -1.5
 
             dof_vel = -5e-5
             dof_acc = -2.5e-7

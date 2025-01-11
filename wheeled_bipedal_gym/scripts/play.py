@@ -34,7 +34,12 @@ import os
 import isaacgym
 from isaacgym.torch_utils import *
 from wheeled_bipedal_gym.envs import *
-from wheeled_bipedal_gym.utils import get_args, export_policy_as_jit, task_registry, Logger
+from wheeled_bipedal_gym.utils import (
+    get_args,
+    export_policy_as_jit,
+    task_registry,
+    Logger,
+)
 
 import numpy as np
 import torch
@@ -99,7 +104,7 @@ def play(args):
     img_idx = 0
     latent = None
 
-    CoM_offset_compensate = False
+    CoM_offset_compensate = True
     vel_err_intergral = torch.zeros(env.num_envs, device=env.device)
     vel_cmd = torch.zeros(env.num_envs, device=env.device)
 
@@ -110,7 +115,7 @@ def play(args):
             actions = policy(obs.detach())
 
         env.commands[:, 0] = 0.0
-        env.commands[:, 2] = 0.23  # + 0.07 * np.sin(i * 0.01)
+        env.commands[:, 2] = 0.25 + 0.07 * np.sin(i * 0.01)
         env.commands[:, 3] = 0
 
         if CoM_offset_compensate:

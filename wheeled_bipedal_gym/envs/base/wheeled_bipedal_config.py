@@ -32,22 +32,24 @@ from wheeled_bipedal_gym.envs.base.base_config import BaseConfig
 
 
 class WheeledBipedalCfg(BaseConfig):
-    #设置仿真的envs数量，obs和action的数量等与环境交互的参数
+    # 设置仿真的envs数量，obs和action的数量等与环境交互的参数
     class env:
         num_envs = 4096
-        num_observations = 27 #可观察到的状态变量数量
+        num_observations = 27  # 可观察到的状态变量数量
         num_privileged_obs = (
-                num_observations + 7 * 11 + 3 + 6 * 5 + 3 + 3
+            num_observations + 7 * 11 + 3 + 6 * 5 + 3 + 3
         )  # 用于特权观测的数量
         # if not None a priviledge_obs_buf will be returned by step() (critic obs for assymetric training). None is returned otherwise
         obs_history_length = 5  # number of observations stacked together
-        obs_history_dec = 1  #可能是观测历史的某种衰减因子（根据变量名推测），这里设置为 1，也许表示不进行衰减（如果衰减因子为 1，相当于对所有时间步的观测同等对待）
-        num_actions = 6 # 智能体在环境中可采取的动作数量
+        obs_history_dec = 1  # 可能是观测历史的某种衰减因子（根据变量名推测），这里设置为 1，也许表示不进行衰减（如果衰减因子为 1，相当于对所有时间步的观测同等对待）
+        num_actions = 6  # 智能体在环境中可采取的动作数量
         env_spacing = 3.0  # not used with heightfields/trimeshes 环境间距
         send_timeouts = True  # send time out information to the algorithm 决定是否将超时信息发送给算法
         episode_length_s = 20  # episode length in seconds 表示一个 episode（情节，即智能体从开始到结束的一个完整交互过程）的长度，单位为秒
-        dof_vel_use_pos_diff = True #是一个布尔值，用于决定是否通过位置差异来计算自由度（Degree of Freedom，DOF）的速度。
-        fail_to_terminal_time_s = 1 #表示在出现失败情况后到将环境标记为终止状态所等待的时间，单位为秒
+        dof_vel_use_pos_diff = True  # 是一个布尔值，用于决定是否通过位置差异来计算自由度（Degree of Freedom，DOF）的速度。
+        fail_to_terminal_time_s = (
+            1  # 表示在出现失败情况后到将环境标记为终止状态所等待的时间，单位为秒
+        )
 
     class terrain:
         mesh_type = "plane"
@@ -104,7 +106,7 @@ class WheeledBipedalCfg(BaseConfig):
             height = [0.18, 0.35]
             heading = [-3.14, 3.14]
 
-     # 定义机器人的初始离地位姿、线速度、角速度
+    # 定义机器人的初始离地位姿、线速度、角速度
     class init_state:
         pos = [0.0, 0.0, 0.3]  # x,y,z [m]
         rot = [0.0, 0.0, 0.0, 1.0]  # x,y,z,w [quat]
@@ -113,7 +115,7 @@ class WheeledBipedalCfg(BaseConfig):
         default_joint_angles = {  # target angles when action = 0.0
             "joint_a": 0.0,
             "joint_b": 0.0,
-        } # joint的顺序要和urdf里的joint对应
+        }  # joint的顺序要和urdf里的joint对应
 
     # 底层控制器的选取和PD参数的设
     class control:
@@ -124,7 +126,7 @@ class WheeledBipedalCfg(BaseConfig):
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.5
         # decimation: Number of control action updates @ sim DT per policy DT
-        decimation = 2 # 表示每个仿真间隔dt内policy的更新次数，它和sim里面的dt联合决定了这个控制模型的频率。为dt*decimation
+        decimation = 2  # 表示每个仿真间隔dt内policy的更新次数，它和sim里面的dt联合决定了这个控制模型的频率。为dt*decimation
         pos_action_scale = 0.5
         vel_action_scale = 10.0
         feedforward_force = 60.0
@@ -133,11 +135,13 @@ class WheeledBipedalCfg(BaseConfig):
     class asset:
         file = ""
         name = "wheeled_bipedal"
-        offset = 0.
-        l1 = 0.
-        l2 = 0.
-        penalize_contacts_on = [] # 碰到地面会受到惩罚的link的名字
-        terminate_after_contacts_on = [] # 碰到地面达到某些条件（接触力or时间）后会提前结束当前轮的envs
+        offset = 0.0
+        l1 = 0.0
+        l2 = 0.0
+        penalize_contacts_on = []  # 碰到地面会受到惩罚的link的名字
+        terminate_after_contacts_on = (
+            []
+        )  # 碰到地面达到某些条件（接触力or时间）后会提前结束当前轮的envs
         self_collisions = 1  # 1 to disable, 0 to enable...bitwise filter
         flip_visual_attachments = False
         foot_name = "None"  # name of the feet bodies, used to index body state and contact force tensors
@@ -219,7 +223,7 @@ class WheeledBipedalCfg(BaseConfig):
         soft_torque_limit = 1.0
         base_height_target = 0.25
         max_contact_force = 100.0  # forces above this value are penalized
-     
+
     # 很重要，因为obs和action的值如果在±1之间可以加速模型收敛
     class normalization:
 
@@ -235,7 +239,7 @@ class WheeledBipedalCfg(BaseConfig):
         clip_observations = 100.0
         clip_actions = 100.0
 
-    #在obs中增加噪声
+    # 在obs中增加噪声
     class noise:
         add_noise = True
         noise_level = 0.5  # scales other values
@@ -288,8 +292,10 @@ class WheeledBipedalCfgPPO(BaseConfig):
         activation = "elu"  # can be elu, relu, selu, crelu, lrelu, tanh, sigmoid
 
         # only for ActorCriticSequence
-        num_encoder_obs = (WheeledBipedalCfg.env.obs_history_length *
-                           WheeledBipedalCfg.env.num_observations)
+        num_encoder_obs = (
+            WheeledBipedalCfg.env.obs_history_length
+            * WheeledBipedalCfg.env.num_observations
+        )
         latent_dim = 3  # at least 3 to estimate base linear velocity
         encoder_hidden_dims = [128, 64]
 
@@ -314,9 +320,7 @@ class WheeledBipedalCfgPPO(BaseConfig):
         # policy_class_name = (
         #     "ActorCriticSequence"  # could be ActorCritic, ActorCriticSequence
         # )
-        policy_class_name = (
-            "ActorCritic"  # could be ActorCritic, ActorCriticSequence
-        )
+        policy_class_name = "ActorCritic"  # could be ActorCritic, ActorCriticSequence
         algorithm_class_name = "PPO"
         num_steps_per_env = 48  # per iteration
         max_iterations = 50000  # number of policy updates
