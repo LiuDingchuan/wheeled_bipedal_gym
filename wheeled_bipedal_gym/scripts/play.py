@@ -104,7 +104,7 @@ def play(args):
     img_idx = 0
     latent = None
 
-    CoM_offset_compensate = True
+    CoM_offset_compensate = False
     vel_err_intergral = torch.zeros(env.num_envs, device=env.device)
     vel_cmd = torch.zeros(env.num_envs, device=env.device)
 
@@ -115,7 +115,7 @@ def play(args):
             actions = policy(obs.detach())
 
         env.commands[:, 0] = 0.0
-        env.commands[:, 2] = 0.25 + 0.07 * np.sin(i * 0.01)
+        env.commands[:, 2] = 0.25  # + 0.07 * np.sin(i * 0.01)
         env.commands[:, 3] = 0
 
         if CoM_offset_compensate:

@@ -55,8 +55,9 @@ from .diablo_vmc_config import DiabloVMCCfg
 
 class DiabloVMC(WheeledBipedal):
 
-    def __init__(self, cfg: DiabloVMCCfg, sim_params, physics_engine,
-                 sim_device, headless):
+    def __init__(
+        self, cfg: DiabloVMCCfg, sim_params, physics_engine, sim_device, headless
+    ):
         """Parses the provided config file,
             calls create_sim() (which creates, simulation, terrain and environments),
             initilizes pytorch buffers used during training
@@ -70,8 +71,7 @@ class DiabloVMC(WheeledBipedal):
             headless (bool): Run without rendering if True
         """
         self.cfg = cfg
-        super().__init__(self.cfg, sim_params, physics_engine, sim_device,
-                         headless)
+        super().__init__(self.cfg, sim_params, physics_engine, sim_device, headless)
 
     def step(self, actions):
         """Apply actions, simulate, call self.post_physics_step()
@@ -80,8 +80,7 @@ class DiabloVMC(WheeledBipedal):
             actions (torch.Tensor): Tensor of shape (num_envs, num_actions_per_env)
         """
         clip_actions = self.cfg.normalization.clip_actions
-        self.actions = torch.clip(actions, -clip_actions,
-                                  clip_actions).to(self.device)
+        self.actions = torch.clip(actions, -clip_actions, clip_actions).to(self.device)
         # step physics and render each frame
         self.render()
         self.pre_physics_step()
@@ -89,14 +88,14 @@ class DiabloVMC(WheeledBipedal):
             self.leg_post_physics_step()
             self.envs_steps_buf += 1
             self.action_fifo = torch.cat(
-                (self.actions.unsqueeze(1), self.action_fifo[:, :-1, :]),
-                dim=1)
+                (self.actions.unsqueeze(1), self.action_fifo[:, :-1, :]), dim=1
+            )
             self.torques = self._compute_torques(
-                self.action_fifo[torch.arange(self.num_envs),
-                self.action_delay_idx, :]).view(
-                self.torques.shape)
+                self.action_fifo[torch.arange(self.num_envs), self.action_delay_idx, :]
+            ).view(self.torques.shape)
             self.gym.set_dof_actuation_force_tensor(
-                self.sim, gymtorch.unwrap_tensor(self.torques))
+                self.sim, gymtorch.unwrap_tensor(self.torques)
+            )
             if self.cfg.domain_rand.push_robots:
                 self._push_robots()
             self.gym.simulate(self.sim)
@@ -110,8 +109,9 @@ class DiabloVMC(WheeledBipedal):
         clip_obs = self.cfg.normalization.clip_observations
         self.obs_buf = torch.clip(self.obs_buf, -clip_obs, clip_obs)
         if self.privileged_obs_buf is not None:
-            self.privileged_obs_buf = torch.clip(self.privileged_obs_buf,
-                                                 -clip_obs, clip_obs)
+            self.privileged_obs_buf = torch.clip(
+                self.privileged_obs_buf, -clip_obs, clip_obs
+            )
 
         return (
             self.obs_buf,
@@ -128,12 +128,12 @@ class DiabloVMC(WheeledBipedal):
 
         if self.cfg.env.num_privileged_obs is not None:
             heights = (
-                    torch.clip(
-                        self.root_states[:, 2].unsqueeze(1) - 0.5 - self.measured_heights,
-                        -1,
-                        1.0,
-                        )
-                    * self.obs_scales.height_measurements
+                torch.clip(
+                    self.root_states[:, 2].unsqueeze(1) - 0.5 - self.measured_heights,
+                    -1,
+                    1.0,
+                )
+                * self.obs_scales.height_measurements
             )
             self.privileged_obs_buf = torch.cat(
                 (
@@ -158,11 +158,11 @@ class DiabloVMC(WheeledBipedal):
         # add noise if needed
         if self.add_noise:
             self.obs_buf += (
-                                    2 * torch.rand_like(self.obs_buf) - 1
-                            ) * self.noise_scale_vec
+                2 * torch.rand_like(self.obs_buf) - 1
+            ) * self.noise_scale_vec
 
         self.obs_history = torch.cat(
-            (self.obs_history[:, self.num_obs:], self.obs_buf), dim=-1
+            (self.obs_history[:, self.num_obs :], self.obs_buf), dim=-1
         )
 
     def compute_proprioception_observations(self):
@@ -196,37 +196,49 @@ class DiabloVMC(WheeledBipedal):
         Returns:
             [torch.Tensor]: Torques sent to the simulation
         """
-        theta0_ref = (torch.cat(
-            (
-                (actions[:, 0]).unsqueeze(1),
-                (actions[:, 3]).unsqueeze(1),
-            ),
-            axis=1,
-        ) * self.cfg.control.action_scale_theta)
-        l0_ref = (torch.cat(
-            (
-                (actions[:, 1]).unsqueeze(1),
-                (actions[:, 4]).unsqueeze(1),
-            ),
-            axis=1,
-        ) * self.cfg.control.action_scale_l0) + self.cfg.control.l0_offset
-        wheel_vel_ref = (torch.cat(
-            (
-                (actions[:, 2]).unsqueeze(1),
-                (actions[:, 5]).unsqueeze(1),
-            ),
-            axis=1,
-        ) * self.cfg.control.action_scale_vel)
+        theta0_ref = (
+            torch.cat(
+                (
+                    (actions[:, 0]).unsqueeze(1),
+                    (actions[:, 3]).unsqueeze(1),
+                ),
+                axis=1,
+            )
+            * self.cfg.control.action_scale_theta
+        )
+        l0_ref = (
+            torch.cat(
+                (
+                    (actions[:, 1]).unsqueeze(1),
+                    (actions[:, 4]).unsqueeze(1),
+                ),
+                axis=1,
+            )
+            * self.cfg.control.action_scale_l0
+        ) + self.cfg.control.l0_offset
+        wheel_vel_ref = (
+            torch.cat(
+                (
+                    (actions[:, 2]).unsqueeze(1),
+                    (actions[:, 5]).unsqueeze(1),
+                ),
+                axis=1,
+            )
+            * self.cfg.control.action_scale_vel
+        )
 
-        self.torque_leg = (self.theta_kp * (theta0_ref - self.theta0) -
-                           self.theta_kd * self.theta0_dot)
-        self.force_leg = self.l0_kp * (l0_ref -
-                                       self.L0) - self.l0_kd * self.L0_dot
-        self.torque_wheel = self.d_gains[:, [2, 5]] * (wheel_vel_ref -
-                                                       self.dof_vel[:, [2, 5]])
+        self.torque_leg = (
+            self.theta_kp * (theta0_ref - self.theta0) - self.theta_kd * self.theta0_dot
+        )
+        self.force_leg = self.l0_kp * (l0_ref - self.L0) - self.l0_kd * self.L0_dot
+        self.torque_wheel = self.d_gains[:, [2, 5]] * (
+            wheel_vel_ref - self.dof_vel[:, [2, 5]]
+        )
         T1, T2 = self.compute_motor_torque(
-            self.force_leg +
-            self.cfg.control.feedforward_force * torch.cos(self.theta0),self.torque_leg)
+            self.force_leg
+            + self.cfg.control.feedforward_force * torch.cos(self.theta0),
+            self.torque_leg,
+        )
 
         torques = torch.cat(
             (
@@ -240,9 +252,9 @@ class DiabloVMC(WheeledBipedal):
             axis=1,
         )
 
-        return torch.clip(torques * self.torques_scale, -self.torque_limits,
-                          self.torque_limits)
-
+        return torch.clip(
+            torques * self.torques_scale, -self.torque_limits, self.torque_limits
+        )
 
     def _get_noise_scale_vec(self, cfg):
         """Sets a vector used to scale the noise added to the observations.
@@ -258,30 +270,22 @@ class DiabloVMC(WheeledBipedal):
         self.add_noise = self.cfg.noise.add_noise
         noise_scales = self.cfg.noise.noise_scales
         noise_level = self.cfg.noise.noise_level
-        noise_vec[:
-                  3] = noise_scales.ang_vel * noise_level * self.obs_scales.ang_vel
+        noise_vec[:3] = noise_scales.ang_vel * noise_level * self.obs_scales.ang_vel
         noise_vec[3:6] = noise_scales.gravity * noise_level
         noise_vec[6:8] = 0.0  # commands
-        noise_vec[
-            8:
-            10] = noise_scales.dof_pos * noise_level * self.obs_scales.dof_pos
-        noise_vec[
-            10:
-            12] = noise_scales.dof_vel * noise_level * self.obs_scales.dof_vel
+        noise_vec[8:10] = noise_scales.dof_pos * noise_level * self.obs_scales.dof_pos
+        noise_vec[10:12] = noise_scales.dof_vel * noise_level * self.obs_scales.dof_vel
         noise_vec[12:14] = noise_scales.l0 * noise_level * self.obs_scales.l0
-        noise_vec[
-            14:16] = noise_scales.l0_dot * noise_level * self.obs_scales.l0_dot
-        noise_vec[
-            16:
-            18] = noise_scales.dof_pos * noise_level * self.obs_scales.dof_pos
-        noise_vec[
-            18:
-            20] = noise_scales.dof_vel * noise_level * self.obs_scales.dof_vel
+        noise_vec[14:16] = noise_scales.l0_dot * noise_level * self.obs_scales.l0_dot
+        noise_vec[16:18] = noise_scales.dof_pos * noise_level * self.obs_scales.dof_pos
+        noise_vec[18:20] = noise_scales.dof_vel * noise_level * self.obs_scales.dof_vel
         noise_vec[20:26] = 0.0  # previous actions
         if self.cfg.terrain.measure_heights:
-            noise_vec[48:235] = (noise_scales.height_measurements *
-                                 noise_level *
-                                 self.obs_scales.height_measurements)
+            noise_vec[48:235] = (
+                noise_scales.height_measurements
+                * noise_level
+                * self.obs_scales.height_measurements
+            )
         return noise_vec
 
     # ----------------------------------------
@@ -290,8 +294,7 @@ class DiabloVMC(WheeledBipedal):
         # get gym GPU state tensors
         actor_root_state = self.gym.acquire_actor_root_state_tensor(self.sim)
         dof_state_tensor = self.gym.acquire_dof_state_tensor(self.sim)
-        net_contact_forces = self.gym.acquire_net_contact_force_tensor(
-            self.sim)
+        net_contact_forces = self.gym.acquire_net_contact_force_tensor(self.sim)
         self.gym.refresh_dof_state_tensor(self.sim)
         self.gym.refresh_actor_root_state_tensor(self.sim)
         self.gym.refresh_net_contact_force_tensor(self.sim)
@@ -299,26 +302,25 @@ class DiabloVMC(WheeledBipedal):
         # create some wrapper tensors for different slices
         self.root_states = gymtorch.wrap_tensor(actor_root_state)
         self.dof_state = gymtorch.wrap_tensor(dof_state_tensor)
-        self.dof_pos = self.dof_state.view(self.num_envs, self.num_dof, 2)[...,
-                                                                           0]
-        self.dof_vel = self.dof_state.view(self.num_envs, self.num_dof, 2)[...,
-                                                                           1]
+        self.dof_pos = self.dof_state.view(self.num_envs, self.num_dof, 2)[..., 0]
+        self.dof_vel = self.dof_state.view(self.num_envs, self.num_dof, 2)[..., 1]
         self.dof_acc = torch.zeros_like(self.dof_vel)
         self.base_quat = self.root_states[:, 3:7]
 
         self.contact_forces = gymtorch.wrap_tensor(net_contact_forces).view(
-            self.num_envs, -1, 3)  # shape: num_envs, num_bodies, xyz axis
+            self.num_envs, -1, 3
+        )  # shape: num_envs, num_bodies, xyz axis
 
         # initialize some data used later on
         self.common_step_counter = 0
         self.extras = {}
         self.noise_scale_vec = self._get_noise_scale_vec(self.cfg)
-        self.gravity_vec = to_torch(get_axis_params(-1.0, self.up_axis_idx),
-                                    device=self.device).repeat(
-                                        (self.num_envs, 1))
-        self.forward_vec = to_torch([1.0, 0.0, 0.0],
-                                    device=self.device).repeat(
-                                        (self.num_envs, 1))
+        self.gravity_vec = to_torch(
+            get_axis_params(-1.0, self.up_axis_idx), device=self.device
+        ).repeat((self.num_envs, 1))
+        self.forward_vec = to_torch([1.0, 0.0, 0.0], device=self.device).repeat(
+            (self.num_envs, 1)
+        )
         self.torques = torch.zeros(
             self.num_envs,
             self.num_actions,
@@ -419,7 +421,8 @@ class DiabloVMC(WheeledBipedal):
             requires_grad=False,
         )
         self.command_ranges["lin_vel_x"][:] = torch.tensor(
-            self.cfg.commands.ranges.lin_vel_x)
+            self.cfg.commands.ranges.lin_vel_x
+        )
         self.command_ranges["ang_vel_yaw"] = torch.zeros(
             self.num_envs,
             2,
@@ -428,7 +431,8 @@ class DiabloVMC(WheeledBipedal):
             requires_grad=False,
         )
         self.command_ranges["ang_vel_yaw"][:] = torch.tensor(
-            self.cfg.commands.ranges.ang_vel_yaw)
+            self.cfg.commands.ranges.ang_vel_yaw
+        )
         self.command_ranges["height"] = torch.zeros(
             self.num_envs,
             2,
@@ -436,8 +440,7 @@ class DiabloVMC(WheeledBipedal):
             device=self.device,
             requires_grad=False,
         )
-        self.command_ranges["height"][:] = torch.tensor(
-            self.cfg.commands.ranges.height)
+        self.command_ranges["height"][:] = torch.tensor(self.cfg.commands.ranges.height)
         self.feet_air_time = torch.zeros(
             self.num_envs,
             self.feet_indices.shape[0],
@@ -452,20 +455,19 @@ class DiabloVMC(WheeledBipedal):
             device=self.device,
             requires_grad=False,
         )
-        self.base_lin_vel = quat_rotate_inverse(self.base_quat,
-                                                self.root_states[:, 7:10])
-        self.base_ang_vel = quat_rotate_inverse(self.base_quat,
-                                                self.root_states[:, 10:13])
+        self.base_lin_vel = quat_rotate_inverse(
+            self.base_quat, self.root_states[:, 7:10]
+        )
+        self.base_ang_vel = quat_rotate_inverse(
+            self.base_quat, self.root_states[:, 10:13]
+        )
         self.rigid_body_external_forces = torch.zeros(
-            (self.num_envs, self.num_bodies, 3),
-            device=self.device,
-            requires_grad=False)
+            (self.num_envs, self.num_bodies, 3), device=self.device, requires_grad=False
+        )
         self.rigid_body_external_torques = torch.zeros(
-            (self.num_envs, self.num_bodies, 3),
-            device=self.device,
-            requires_grad=False)
-        self.projected_gravity = quat_rotate_inverse(self.base_quat,
-                                                     self.gravity_vec)
+            (self.num_envs, self.num_bodies, 3), device=self.device, requires_grad=False
+        )
+        self.projected_gravity = quat_rotate_inverse(self.base_quat, self.gravity_vec)
         self.action_delay_idx = torch.zeros(
             self.num_envs,
             dtype=torch.long,
@@ -473,8 +475,8 @@ class DiabloVMC(WheeledBipedal):
             requires_grad=False,
         )
         delay_max = np.int64(
-            np.ceil(self.cfg.domain_rand.delay_ms_range[1] / 1000 /
-                    self.sim_params.dt))
+            np.ceil(self.cfg.domain_rand.delay_ms_range[1] / 1000 / self.sim_params.dt)
+        )
         self.action_fifo = torch.zeros(
             (self.num_envs, delay_max, self.cfg.env.num_actions),
             dtype=torch.float,
@@ -484,40 +486,28 @@ class DiabloVMC(WheeledBipedal):
         if self.cfg.terrain.measure_heights:
             self.height_points = self._init_height_points()
         self.measured_heights = 0
-        self.base_height = torch.mean(self.root_states[:, 2].unsqueeze(1) -
-                                      self.measured_heights,
-                                      dim=1)
+        self.base_height = torch.mean(
+            self.root_states[:, 2].unsqueeze(1) - self.measured_heights, dim=1
+        )
 
-        self.L0 = torch.zeros(self.num_envs,
-                              2,
-                              dtype=torch.float,
-                              device=self.device,
-                              requires_grad=False)
-        self.L0_dot = torch.zeros(self.num_envs,
-                                  2,
-                                  dtype=torch.float,
-                                  device=self.device,
-                                  requires_grad=False)
-        self.theta0 = torch.zeros(self.num_envs,
-                                  2,
-                                  dtype=torch.float,
-                                  device=self.device,
-                                  requires_grad=False)
-        self.theta0_dot = torch.zeros(self.num_envs,
-                                      2,
-                                      dtype=torch.float,
-                                      device=self.device,
-                                      requires_grad=False)
-        self.theta1 = torch.zeros(self.num_envs,
-                                  2,
-                                  dtype=torch.float,
-                                  device=self.device,
-                                  requires_grad=False)
-        self.theta2 = torch.zeros(self.num_envs,
-                                  2,
-                                  dtype=torch.float,
-                                  device=self.device,
-                                  requires_grad=False)
+        self.L0 = torch.zeros(
+            self.num_envs, 2, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.L0_dot = torch.zeros(
+            self.num_envs, 2, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.theta0 = torch.zeros(
+            self.num_envs, 2, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.theta0_dot = torch.zeros(
+            self.num_envs, 2, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.theta1 = torch.zeros(
+            self.num_envs, 2, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.theta2 = torch.zeros(
+            self.num_envs, 2, dtype=torch.float, device=self.device, requires_grad=False
+        )
 
         # joint positions offsets and PD gains
         self.raw_default_dof_pos = torch.zeros(
@@ -622,13 +612,12 @@ class DiabloVMC(WheeledBipedal):
         if self.cfg.domain_rand.randomize_action_delay:
             action_delay_idx = torch.round(
                 torch_rand_float(
-                    self.cfg.domain_rand.delay_ms_range[0] / 1000 /
-                    self.sim_params.dt,
-                    self.cfg.domain_rand.delay_ms_range[1] / 1000 /
-                    self.sim_params.dt,
+                    self.cfg.domain_rand.delay_ms_range[0] / 1000 / self.sim_params.dt,
+                    self.cfg.domain_rand.delay_ms_range[1] / 1000 / self.sim_params.dt,
                     (self.num_envs, 1),
                     device=self.device,
-                )).squeeze(-1)
+                )
+            ).squeeze(-1)
             self.action_delay_idx = action_delay_idx.long()
 
     # ------------ reward functions----------------
@@ -646,8 +635,8 @@ class DiabloVMC(WheeledBipedal):
         # right_wheel_vel = self.commands[:,0]/2 + self.commands[:,1]
         # return torch.sum(torch.square(self.dof_vel[:, 2] - left_wheel_vel) + torch.square(self.dof_vel[:, 5]) - right_wheel_vel)
         return torch.sum(
-            torch.square(self.dof_vel[:, 2]) +
-            torch.square(self.dof_vel[:, 5]))
+            torch.square(self.dof_vel[:, 2]) + torch.square(self.dof_vel[:, 5])
+        )
 
     def _reward_static_action_rate(self):
         # When the order remains unchanged, the punishment action rate is higher
