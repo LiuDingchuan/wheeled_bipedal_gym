@@ -152,15 +152,15 @@ class WheeledBipedal(BaseTask):
         # change from original for the joint tf is different！
         self.theta1 = torch.cat(
             (
-                self.dof_pos[:, 0].unsqueeze(1) + self.pi - 0.13433,
-                self.dof_pos[:, 3].unsqueeze(1) + self.pi - 0.13433,
+                self.dof_pos[:, 0].unsqueeze(1) + self.pi - 0.722392,
+                self.dof_pos[:, 3].unsqueeze(1) + self.pi - 0.722392,
             ),
             dim=1,
         )
         self.theta2 = torch.cat(
             (
-                (self.dof_pos[:, 1] - self.pi + 0.26866).unsqueeze(1),
-                (self.dof_pos[:, 4] - self.pi + 0.26866).unsqueeze(1),
+                (self.dof_pos[:, 1] - self.pi + 0.589049).unsqueeze(1),
+                (self.dof_pos[:, 4] - self.pi + 0.589049).unsqueeze(1),
             ),
             dim=1,
         )
@@ -214,11 +214,11 @@ class WheeledBipedal(BaseTask):
         end_x = (
             self.cfg.asset.offset
             + self.cfg.asset.l1 * torch.cos(self.theta1)
-            + self.cfg.asset.l2 * torch.cos(self.theta1 + self.theta2 - 0.349066)
+            + self.cfg.asset.l2 * torch.cos(self.theta1 + self.theta2)
         )
         end_y = self.cfg.asset.l1 * torch.sin(
             self.theta1
-        ) + self.cfg.asset.l2 * torch.sin(self.theta1 + self.theta2 - 0.349066)
+        ) + self.cfg.asset.l2 * torch.sin(self.theta1 + self.theta2)
         L0 = torch.sqrt(end_x**2 + end_y**2)
         theta0 = torch.arctan2(end_y, end_x) - self.pi / 2
         return L0, theta0
@@ -227,9 +227,9 @@ class WheeledBipedal(BaseTask):
         l1 = self.cfg.asset.l1
         l2 = self.cfg.asset.l2
         theta1 = self.theta1
-        theta2 = self.theta2 - 0.349066
-        x = l1 * torch.cos(theta1) + l2 * torch.cos(theta1 + theta2 - 0.349066)
-        y = l1 * torch.sin(theta1) + l2 * torch.sin(theta1 + theta2 - 0.349066)
+        theta2 = self.theta2
+        x = l1 * torch.cos(theta1) + l2 * torch.cos(theta1 + theta2)
+        y = l1 * torch.sin(theta1) + l2 * torch.sin(theta1 + theta2)
 
         dx_dphi1 = -l1 * torch.sin(theta1) - l2 * torch.sin(theta1 + theta2)
         dx_dphi2 = -l2 * torch.sin(theta1 + theta2)
