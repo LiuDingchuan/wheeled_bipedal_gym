@@ -36,7 +36,7 @@ from wheeled_bipedal_gym.envs.base.wheeled_bipedal_config import (
 
 class DiabloPlusCfg(WheeledBipedalCfg):
     class env(WheeledBipedalCfg.env):
-        num_envs = 1024
+        num_envs = 4096
 
     # 设置地形参数
     class terrain(WheeledBipedalCfg.terrain):
@@ -138,7 +138,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
 
     # 定义机器人模型内容，例如URDF和一些上下限
     class asset(WheeledBipedalCfg.asset):
-        file = "{WHEELED_BIPEDAL_GYM_ROOT_DIR}/resources/robots/diablo_plus_urdf/urdf/diablo_plus.urdf"
+        file = "{WHEELED_BIPEDAL_GYM_ROOT_DIR}/resources/robots/diablo_plus/urdf/diablo_plus.urdf"
         name = "diablo_plus"
         foot_name = "wheel"
         offset = 0.0
@@ -150,6 +150,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
             "left_knee",
             "right_hip",
             "right_knee",
+            "base_link",
         ]  # 碰到地面会收到惩罚的name of Link
         terminate_after_contacts_on = [
             "base_link"
