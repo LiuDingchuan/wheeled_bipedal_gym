@@ -123,10 +123,10 @@ class DiabloPlusCfg(WheeledBipedalCfg):
         damping = {
             "left_hip": 0.4,
             "left_knee": 0.5,
-            "left_wheel": 0.6,
+            "left_wheel": 0.8,
             "right_hip": 0.4,
             "right_knee": 0.5,
-            "right_wheel": 0.6,
+            "right_wheel": 0.8,
         }  # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.5
@@ -190,17 +190,17 @@ class DiabloPlusCfg(WheeledBipedalCfg):
             tracking_lin_vel_enhance = 1
             tracking_ang_vel = 0.5
 
-            base_height = 1
+            base_height = 5.0
             base_height_enhance = 1
-            nominal_state = -0.5
+            nominal_state = -2.0
             lin_vel_z = -2.0
-            ang_vel_xy = -0.05
+            ang_vel_xy = -0.0
             orientation = -1.5
 
             dof_vel = -5e-5
             dof_acc = -2.5e-7
             torques = -1e-5
-            action_rate = -0.03
+            action_rate = -0.05
             action_smooth = -0.03
 
             collision = -1000.0
@@ -210,6 +210,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
             theta_limit = -0.01
             same_l = 0.1e-5
             wheel_vel = -5e-1
+            no_fly = 0.2 #惩罚轮子离开地面
 
         only_positive_rewards = False  # if true negative total rewards are clipped at zero (avoids early termination problems)
         clip_single_reward = 1

@@ -732,10 +732,10 @@ class WheeledBipedal(BaseTask):
 
         T1, T2 = self.compute_motor_torque(self.cfg.control.feedforward_force, 0.0)
 
-        torques[:, 0] += T1[:, 0]
-        torques[:, 3] += T1[:, 1]
-        torques[:, 1] += T2[:, 0]
-        torques[:, 4] += T2[:, 1]
+        torques[:, 0] += T1[:, 0] #left_hip
+        torques[:, 3] += T1[:, 1] #right_hip
+        torques[:, 1] += T2[:, 0] #left_knee
+        torques[:, 4] += T2[:, 1] #right_knee
 
         return torch.clip(
             torques * self.torques_scale, -self.torque_limits, self.torque_limits
@@ -1956,6 +1956,11 @@ class WheeledBipedal(BaseTask):
             )
         else:
             return torch.tensor(0.0)
+        
+    def _reward_no_fly(self):   #todo重载奖励函数
+        contacts = self.contact_forces[:, self.feet_indices, 2] > 0.1
+        rew = 1.*(torch.sum(1.*contacts, dim=1)==2) #检查是不是两腿都在地上
+        return rew
 
     # def _reward_block_wheel_tau(self):
     #     return torch.sum(torch.square(self.dof_vel[:, 2]) + torch.square(self.dof_vel[:, 5]))
