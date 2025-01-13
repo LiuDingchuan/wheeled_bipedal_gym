@@ -50,7 +50,7 @@ def play(args):
     # override some parameters for testing
     env_cfg.env.episode_length_s = 20
     env_cfg.env.fail_to_terminal_time_s = 3
-    env_cfg.env.num_envs = min(env_cfg.env.num_envs, 50)
+    env_cfg.env.num_envs = min(env_cfg.env.num_envs, 25)
     env_cfg.terrain.num_rows = 5
     env_cfg.terrain.num_cols = 10
     env_cfg.terrain.max_init_terrain_level = env_cfg.terrain.num_rows - 1
@@ -115,7 +115,7 @@ def play(args):
             actions = policy(obs.detach())
 
         env.commands[:, 0] = 1.0
-        env.commands[:, 2] = 0.25  # + 0.07 * np.sin(i * 0.01)
+        env.commands[:, 2] = 0.20  # + 0.07 * np.sin(i * 0.01)
         env.commands[:, 3] = 0
 
         if CoM_offset_compensate:
