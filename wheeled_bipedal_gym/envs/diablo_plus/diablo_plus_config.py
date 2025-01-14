@@ -195,7 +195,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
             nominal_state = -2.0
             lin_vel_z = -2.0
             ang_vel_xy = -0.0
-            orientation = -1.5
+            orientation = -10.0
 
             dof_vel = -5e-5
             dof_acc = -2.5e-7

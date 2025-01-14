@@ -38,8 +38,7 @@ from isaacgym.torch_utils import *
 from wheeled_bipedal_gym.utils.math import *
 import numpy as np
 import torch
-from legged_gym.utils.keyboardctrl import KeyboardCtrl #tofix
-
+from wheeled_bipedal_gym.utils.keyboardctrl import KeyboardCtrl
 
 def play(args):
     global SET_CAMERA_FOR_SPECIFIC_ROBOT
