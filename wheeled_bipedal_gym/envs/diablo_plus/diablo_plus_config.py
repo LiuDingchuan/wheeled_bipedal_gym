@@ -209,12 +209,12 @@ class DiabloPlusCfg(WheeledBipedalCfg):
 
             theta_limit = -0.01
             same_l = 0.1e-5
-            wheel_vel = -5e-1
-            no_fly = 0.2 #惩罚轮子离开地面
+            wheel_vel = -0.5
+            no_fly = 0.2 #奖励轮子如果两个都在地上
 
         only_positive_rewards = False  # if true negative total rewards are clipped at zero (avoids early termination problems)
         clip_single_reward = 1
-        tracking_sigma = 0.25  # tracking reward = exp(-error^2/sigma)
+        tracking_sigma = 0.1  # tracking reward = exp(-error^2/sigma) #这个值越小跟踪效果反而越好，因为这样只有当速度非常接近v_set的时候奖励才会最大
         soft_dof_pos_limit = (
             0.97  # percentage of urdf limits, values above this limit are penalized
         )
