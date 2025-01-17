@@ -28,7 +28,7 @@
 #
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 
-from wheeled_bipedal_gym import wheeled_bipedal_gym_ROOT_DIR
+from wheeled_bipedal_gym import WHEELED_BIPEDAL_GYM_ROOT_DIR
 import os
 
 import isaacgym
@@ -55,7 +55,7 @@ def play(args):
 
     # prepare environment
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
-    obs = env.get_observations()
+    obs, obs_history = env.get_observations()
 
     # load policy
     train_cfg.runner.resume = True
@@ -77,7 +77,7 @@ def play(args):
     # export policy as a jit module (used to run it from C++)
     if EXPORT_POLICY:
         path = os.path.join(
-            wheeled_bipedal_gym_ROOT_DIR,
+            WHEELED_BIPEDAL_GYM_ROOT_DIR,
             "logs",
             train_cfg.runner.experiment_name,
             "exported",
@@ -97,14 +97,19 @@ def play(args):
     camera_vel = np.array([1.0, 1.0, 0.0])
     camera_direction = np.array(env_cfg.viewer.lookat) - np.array(env_cfg.viewer.pos)
     img_idx = 0
+    latent = None
 
     for i in range(10 * int(env.max_episode_length)):
-        actions = policy(obs.detach())
-        obs, _, rews, dones, infos = env.step(actions.detach())
+        if ppo_runner.alg.actor_critic.is_sequence:
+            actions, latent = policy(obs, obs_history)
+        else:
+            actions = policy(obs.detach())
+            
+        obs, _, rews, dones, infos, obs_history = env.step(actions.detach())
         if ctrl.record:
             if i % 2:
                 filename = os.path.join(
-                    wheeled_bipedal_gym_ROOT_DIR,
+                    WHEELED_BIPEDAL_GYM_ROOT_DIR,
                     "logs",
                     train_cfg.runner.experiment_name,
                     "exported",
@@ -145,21 +150,21 @@ def play(args):
                     "dof_vel": env.dof_vel[robot_index, joint_index].item(),
                     "dof_torque": env.torques[robot_index, joint_index].item(),
                     "command_x": env.commands[robot_index, 0].item(),
-                    "command_y": env.commands[robot_index, 1].item(),
-                    "command_yaw": env.commands[robot_index, 2].item(),
+                    # "command_y": env.commands[robot_index, 1].item(),
+                    "command_yaw": env.commands[robot_index, 1].item(),
+                    "command_base_height": env.commands[robot_index, 2].item(),
                     "base_vel_x": env.base_lin_vel[robot_index, 0].item(),
-                    "base_vel_y": env.base_lin_vel[robot_index, 1].item(),
-                    "base_vel_z": env.base_lin_vel[robot_index, 2].item(),
-                    "base_vel_yaw": env.base_ang_vel[robot_index, 2].item(),
+                    # "base_vel_y": env.base_lin_vel[robot_index, 1].item(),
+                    # "base_vel_z": env.base_lin_vel[robot_index, 2].item(),
+                    "base_vel_yaw": env.base_ang_vel[robot_index, 1].item(),
                     "contact_forces_z": env.contact_forces[
                         robot_index, env.feet_indices, 2
                     ]
                     .cpu()
                     .numpy(),
-                    "base_height": env.root_states[robot_index, 2].item(),
-                    "command_base_height": env.commands[robot_index, 4].item(),
-                    "knee_angle": env.theta_right[robot_index].item(),
-                    "command_knee_angle": env.commands[robot_index, 5].item(),
+                    "base_height": env.base_height[robot_index].item(),
+                    # "knee_angle": env.theta_right[robot_index].item(),
+                    # "command_knee_angle": env.commands[robot_index, 5].item(),
                 }
             )
         elif i == stop_state_log:

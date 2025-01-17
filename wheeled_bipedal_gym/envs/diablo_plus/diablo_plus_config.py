@@ -87,7 +87,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
         curriculum_threshold = 0.7
         num_commands = 3  # default: lin_vel_x, lin_vel_y, ang_vel_yaw, heading (in heading mode ang_vel_yaw is recomputed from heading error)
         resampling_time = 5.0  # time before command are changed[s]
-        heading_command = True  # if true: compute ang vel command from heading error
+        heading_command = False  # if true: compute ang vel command from heading error
 
         class ranges(WheeledBipedalCfg.commands.ranges):
             lin_vel_x = [-1.2, 1.2]  # min max [m/s]
@@ -188,7 +188,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
         class scales(WheeledBipedalCfg.rewards.scales):
             tracking_lin_vel = 8.0
             tracking_lin_vel_enhance = 1
-            tracking_ang_vel = 0.5
+            tracking_ang_vel = 2.0
 
             base_height = 5.0
             base_height_enhance = 1

@@ -1,7 +1,7 @@
 import isaacgym
 import torch
-from wheeled_bipedal_gym.envs.diablo_plus.diablo_plus import DiabloMob
-from wheeled_bipedal_gym.envs.diablo_plus.diablo_plus_config import DiabloFlatCfg
+from wheeled_bipedal_gym.envs.diablo_plus.diablo_plus import WheeledBipedal
+from wheeled_bipedal_gym.envs.diablo_plus.diablo_plus_config import DiabloPlusCfg
 from wheeled_bipedal_gym.utils.math import *
 from isaacgym.gymapi import (
     KEY_F,
@@ -26,7 +26,7 @@ from isaacgym.gymapi import (
 )
 
 class KeyboardCtrl:
-    def __init__(self, env: DiabloMob, env_cfg: DiabloFlatCfg, **kwargs):
+    def __init__(self, env: WheeledBipedal, env_cfg: DiabloPlusCfg, **kwargs):
         self.env = env
         self.env_cfg = env_cfg
         self.actions = kwargs["num_actions"]
@@ -60,12 +60,12 @@ class KeyboardCtrl:
             env.gym.subscribe_viewer_keyboard_event(env.viewer, key, action)
 
         # 跳跃高度值
-        self.jump_height = torch.full((1,), env_cfg.commands.ranges.jump_height[1])
+        # self.jump_height = torch.full((1,), env_cfg.commands.ranges.jump_height[1])
 
     def run(self):
 
         for ui_event in self.env.gym.query_viewer_action_events(self.env.viewer):
-            self.env.commands[:, 4] = 0 # 长按没有键盘事件可以连续跳跃
+            # self.env.commands[:, 4] = 0 # 长按没有键盘事件可以连续跳跃
             if ui_event.value == 0:
                 continue
 
@@ -89,28 +89,26 @@ class KeyboardCtrl:
                 self.agent_model.reset()
                 obs, _ = self.env.reset()
             if ui_event.action == "stop":
-                self.env.commands[:, [0, 4, 5]] = 0
+                self.env.commands[:, [0, 1]] = 0
             if ui_event.action == "forward":
-                self.env.commands[:, 0] = torch.clip(self.env.commands[:, 0], 0, 10)
-                self.env.commands[:, 0] += 0.5
+                self.env.commands[:, 0] += 0.1
             if ui_event.action == "backward":
-                self.env.commands[:, 0] = torch.clip(self.env.commands[:, 0], -10, 0)
-                self.env.commands[:, 0] -= 0.5
+                self.env.commands[:, 0] -= 0.1
             if ui_event.action == "leftturn":
-                self.env.commands[:, 3] += 0.5
+                self.env.commands[:, 1] += 0.1
             if ui_event.action == "rightturn":
-                self.env.commands[:, 3] -= 0.5
+                self.env.commands[:, 1] -= 0.1
             if ui_event.action == "move_up":
-                self.env.commands[:, 5] += 0.1
+                self.env.commands[:, 2] += 0.01
             if ui_event.action == "move_down":
-                self.env.commands[:, 5] -= 0.1
-            if ui_event.action == "jump":
-                self.env.commands[:, 5] = 0
-                self.env.commands[:, 4] = self.jump_height
-            if ui_event.action == "jump_higher":
-                self.jump_height += 0.05
-            if ui_event.action == "jump_lower":
-                self.jump_height -= 0.05
+                self.env.commands[:, 2] -= 0.01
+            # if ui_event.action == "jump":
+            #     self.env.commands[:, 5] = 0
+            #     self.env.commands[:, 4] = self.jump_height
+            # if ui_event.action == "jump_higher":
+            #     self.jump_height += 0.05
+            # if ui_event.action == "jump_lower":
+            #     self.jump_height -= 0.05
             if ui_event.action == "FPV":
                 self.FPV = not self.FPV
             if ui_event.action == "record":
@@ -121,31 +119,34 @@ class KeyboardCtrl:
                 self.env_cfg.commands.ranges.lin_vel_x[0],
                 self.env_cfg.commands.ranges.lin_vel_x[1],
             )
-            self.env.commands[:, 2] = torch.clip(
-                self.env.commands[:, 2],
+            self.env.commands[:, 1] = torch.clip(
+                self.env.commands[:, 1],
                 self.env_cfg.commands.ranges.ang_vel_yaw[0],
                 self.env_cfg.commands.ranges.ang_vel_yaw[1],
             )
-            self.env.commands[:, 3] = wrap_to_pi(self.env.commands[:, 3])
-
-            self.jump_height = torch.clip(
-                self.jump_height,
-                self.env_cfg.commands.ranges.jump_height[0],
-                self.env_cfg.commands.ranges.jump_height[1],
+            self.env.commands[:, 2] = torch.clip(
+                self.env.commands[:, 2],
+                self.env_cfg.commands.ranges.height[0],
+                self.env_cfg.commands.ranges.height[1]
             )
 
-            self.env.commands[:, 5] = torch.clip(
-                self.env.commands[:, 5],
-                self.env_cfg.commands.ranges.knee_angle[0],
-                self.env_cfg.commands.ranges.knee_angle[1],
-            )
+            # self.jump_height = torch.clip(
+            #     self.jump_height,
+            #     self.env_cfg.commands.ranges.jump_height[0],
+            #     self.env_cfg.commands.ranges.jump_height[1],
+            # )
+
+            # self.env.commands[:, 5] = torch.clip(
+            #     self.env.commands[:, 5],
+            #     self.env_cfg.commands.ranges.knee_angle[0],
+            #     self.env_cfg.commands.ranges.knee_angle[1],
+            # )
 
             print(
-                "v:{:.1f} d:{:.2f} h:{:.2f} a:{:.1f}".format(
+                "v_set:{:.2f} v_yaw_set:{:.2f} H_set:{:.2f}".format(
                     self.env.commands[:, 0].item(),
-                    self.env.commands[:, 3].item(),
-                    self.jump_height.item(),
-                    self.env.commands[:, 5].item(),
+                    self.env.commands[:, 1].item(),
+                    self.env.commands[:, 2].item(),
                 )
             )
 

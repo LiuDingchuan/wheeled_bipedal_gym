@@ -195,7 +195,8 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-          <cylinder radius="0.085" length="0.035"/>
+        <mesh
+          filename="../meshes/left_wheel.STL" />
       </geometry>
     </collision>
   </link>
@@ -366,7 +367,8 @@
         xyz="0 0 0"
         rpy="0 0 0" />
       <geometry>
-          <cylinder radius="0.085" length="0.035"/>
+        <mesh
+          filename="../meshes/right_wheel.STL" />
       </geometry>
     </collision>
   </link>
