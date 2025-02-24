@@ -40,11 +40,11 @@ class DiabloPlusCfg(WheeledBipedalCfg):
 
     # 设置地形参数
     class terrain(WheeledBipedalCfg.terrain):
-        mesh_type = "plane"
+        mesh_type = "trimesh"
         # mesh_type = "trimesh"
         # mesh_type = "trimesh"  # "heightfield" # none, plane, heightfield or trimesh
         horizontal_scale = 0.1  # [m]
-        vertical_scale = 0.005  # [m]
+        vertical_scale = 0.05  # [m]
         border_size = 25  # [m]
         curriculum = True
         static_friction = 0.5
@@ -69,19 +69,19 @@ class DiabloPlusCfg(WheeledBipedalCfg):
         selected = False  # select a unique terrain type and pass all arguments
         terrain_kwargs = None  # Dict of arguments for selected terrain
         max_init_terrain_level = 5  # starting curriculum state
-        terrain_length = 8.0
-        terrain_width = 8.0
-        num_rows = 10  # number of terrain rows (levels)
+        terrain_length = 15 #地形长度，单位：米
+        terrain_width = 15 #地形宽度，单位：米  
+        num_rows = 20  # number of terrain rows (levels)
         num_cols = 20  # number of terrain cols (types)
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete]
-        terrain_proportions = [0.0, 0.5, 0.5, 0.0, 0.0, 0.0]
+        terrain_proportions = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0]#分别对应上面地形的比例
         # trimesh only:
         slope_treshold = (
             0.75  # slopes above this threshold will be corrected to vertical surfaces
         )
 
     class commands(WheeledBipedalCfg.commands):
-        curriculum = False
+        curriculum = True
         basic_max_curriculum = 2.5
         advanced_max_curriculum = 1.5
         curriculum_threshold = 0.7
@@ -92,7 +92,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
         class ranges(WheeledBipedalCfg.commands.ranges):
             lin_vel_x = [-1.2, 1.2]  # min max [m/s]
             ang_vel_yaw = [-0.5, 0.5]  # min max [rad/s]
-            height = [0.15, 0.32]
+            height = [0.18, 0.32]
             heading = [-0.2, 0.2]
 
     # 定义机器人的初始离地位姿 & 初始线速度角速度和default_joint_angles

@@ -732,10 +732,10 @@ class WheeledBipedal(BaseTask):
 
         T1, T2 = self.compute_motor_torque(self.cfg.control.feedforward_force, 0.0)
 
-        torques[:, 0] += T1[:, 0] #left_hip
-        torques[:, 3] += T1[:, 1] #right_hip
-        torques[:, 1] += T2[:, 0] #left_knee
-        torques[:, 4] += T2[:, 1] #right_knee
+        torques[:, 0] += T1[:, 0]  # left_hip
+        torques[:, 3] += T1[:, 1]  # right_hip
+        torques[:, 1] += T2[:, 0]  # left_knee
+        torques[:, 4] += T2[:, 1]  # right_knee
 
         return torch.clip(
             torques * self.torques_scale, -self.torque_limits, self.torque_limits
@@ -1901,9 +1901,13 @@ class WheeledBipedal(BaseTask):
     def _reward_wheel_vel(self):
         # Penalize dof velocities
         R = 0.085
-        left_wheel_v_set = self.commands[:,0] - self.commands[:,1]
-        right_wheel_v_set = self.commands[:,0] + self.commands[:,1]
-        return torch.sum(torch.square(self.dof_vel[:, 2]/R - left_wheel_v_set) + torch.square(self.dof_vel[:, 5])/R - right_wheel_v_set)
+        left_wheel_v_set = self.commands[:, 0] - self.commands[:, 1]
+        right_wheel_v_set = self.commands[:, 0] + self.commands[:, 1]
+        return torch.sum(
+            torch.square(self.dof_vel[:, 2] / R - left_wheel_v_set)
+            + torch.square(self.dof_vel[:, 5]) / R
+            - right_wheel_v_set
+        )
         # return torch.sum(torch.square(self.dof_vel[:, [2, 5]]), dim=1)
 
     def _reward_block_l(self):
@@ -1957,10 +1961,10 @@ class WheeledBipedal(BaseTask):
             )
         else:
             return torch.tensor(0.0)
-        
-    def _reward_no_fly(self):   #todo重载奖励函数
+
+    def _reward_no_fly(self):  # todo重载奖励函数
         contacts = self.contact_forces[:, self.feet_indices, 2] > 0.1
-        rew = 1.*(torch.sum(1.*contacts, dim=1)==2) #检查是不是两腿都在地上
+        rew = 1.0 * (torch.sum(1.0 * contacts, dim=1) == 2)  # 检查是不是两腿都在地上
         return rew
 
     # def _reward_block_wheel_tau(self):

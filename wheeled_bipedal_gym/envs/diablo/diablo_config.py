@@ -37,8 +37,8 @@ from wheeled_bipedal_gym.envs.base.wheeled_bipedal_config import (
 class DiabloCfg(WheeledBipedalCfg):
     # 设置地形参数
     class terrain(WheeledBipedalCfg.terrain):
-        mesh_type = "plane"
-        # mesh_type = "trimesh"
+        # mesh_type = "plane"
+        mesh_type = "trimesh"
         # mesh_type = "trimesh"  # "heightfield" # none, plane, heightfield or trimesh
         horizontal_scale = 0.1  # [m]
         vertical_scale = 0.005  # [m]
@@ -68,7 +68,7 @@ class DiabloCfg(WheeledBipedalCfg):
         max_init_terrain_level = 5  # starting curriculum state
         terrain_length = 8.0
         terrain_width = 8.0
-        num_rows = 10  # number of terrain rows (levels)
+        num_rows = 20  # number of terrain rows (levels)
         num_cols = 20  # number of terrain cols (types)
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete]
         terrain_proportions = [0.0, 0.5, 0.5, 0.0, 0.0, 0.0]
