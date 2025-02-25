@@ -41,7 +41,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
     # 设置地形参数
     class terrain(WheeledBipedalCfg.terrain):
         mesh_type = "trimesh"
-        # mesh_type = "trimesh"
+        # mesh_type = "plane"
         # mesh_type = "trimesh"  # "heightfield" # none, plane, heightfield or trimesh
         horizontal_scale = 0.1  # [m]
         vertical_scale = 0.05  # [m]
@@ -90,7 +90,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
         heading_command = False  # if true: compute ang vel command from heading error
 
         class ranges(WheeledBipedalCfg.commands.ranges):
-            lin_vel_x = [-1.2, 1.2]  # min max [m/s]
+            lin_vel_x = [0.5, 1.2]  # min max [m/s]
             ang_vel_yaw = [-0.5, 0.5]  # min max [rad/s]
             height = [0.18, 0.32]
             heading = [-0.2, 0.2]
@@ -186,7 +186,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
     class rewards(WheeledBipedalCfg.rewards):
 
         class scales(WheeledBipedalCfg.rewards.scales):
-            tracking_lin_vel = 8.0
+            tracking_lin_vel = 10.0
             tracking_lin_vel_enhance = 1
             tracking_ang_vel = 2.0
 
@@ -210,7 +210,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
             theta_limit = -0.01
             same_l = 0.1e-5
             wheel_vel = -0.5
-            no_fly = 0.2 #奖励轮子如果两个都在地上
+            no_fly = 0.5
 
         only_positive_rewards = False  # if true negative total rewards are clipped at zero (avoids early termination problems)
         clip_single_reward = 1
