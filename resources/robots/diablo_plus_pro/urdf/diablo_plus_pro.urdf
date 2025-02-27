@@ -3,12 +3,12 @@
      Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot
-  name="diablo_plus2">
+  name="diablo_plus_pro">
   <link
     name="base_link">
     <inertial>
       <origin
-        xyz="-0.002707 -0.0049409 0.15092"
+        xyz="0.02817 -0.0049865 0.16853"
         rpy="0 0 0" />
       <mass
         value="11.4726" />
@@ -26,7 +26,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="../meshes/base_link.STL" />
+          filename="package://diablo_plus_pro/meshes/base_link.STL" />
       </geometry>
       <material
         name="">
@@ -40,15 +40,15 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="../meshes/base_link.STL" />
+          filename="package://diablo_plus_pro/meshes/base_link.STL" />
       </geometry>
     </collision>
   </link>
   <link
-    name="left_hip">
+    name="left_hip_link">
     <inertial>
       <origin
-        xyz="-0.033875 0.083817 -0.025481"
+        xyz="-0.02147 0.083955 -0.036946"
         rpy="0 0 0" />
       <mass
         value="2.0" />
@@ -66,7 +66,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="../meshes/left_hip.STL" />
+          filename="package://diablo_plus_pro/meshes/left_hip_link.STL" />
       </geometry>
       <material
         name="">
@@ -80,7 +80,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="../meshes/left_hip.STL" />
+          filename="package://diablo_plus_pro/meshes/left_hip_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -93,7 +93,7 @@
     <parent
       link="base_link" />
     <child
-      link="left_hip" />
+      link="left_hip_link" />
     <axis
       xyz="0 1 0" />
     <limit
@@ -103,10 +103,10 @@
       velocity="10" />
   </joint>
   <link
-    name="left_knee">
+    name="left_knee_link">
     <inertial>
       <origin
-        xyz="0.085224 -0.0055133 -0.069937"
+        xyz="0.091371 -0.0059746 0.042483"
         rpy="0 0 0" />
       <mass
         value="2.0" />
@@ -124,7 +124,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="../meshes/left_knee.STL" />
+          filename="package://diablo_plus_pro/meshes/left_knee_link.STL" />
       </geometry>
       <material
         name="">
@@ -138,7 +138,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="../meshes/left_knee.STL" />
+          filename="package://diablo_plus_pro/meshes/left_knee_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -146,12 +146,12 @@
     name="left_knee_joint"
     type="revolute">
     <origin
-      xyz="-0.15051 0.11148 -0.1317"
+      xyz="-0.088027 0.11148 -0.17958"
       rpy="0 0 0" />
     <parent
-      link="left_hip" />
+      link="left_hip_link" />
     <child
-      link="left_knee" />
+      link="left_knee_link" />
     <axis
       xyz="0 1 0" />
     <limit
@@ -161,20 +161,20 @@
       velocity="10" />
   </joint>
   <link
-    name="left_wheel">
+    name="left_wheel_link">
     <inertial>
       <origin
-        xyz="-7.0925E-06 0.017953 1.1379E-05"
+        xyz="-2.0379E-06 0.019153 -4.2928E-07"
         rpy="0 0 0" />
       <mass
-        value="1.63" />
+        value="2.0" />
       <inertia
-        ixx="0.0038687294"
-        ixy="3.4674606E-07"
-        ixz="-6.1772612E-09"
-        iyy="0.0073579312"
-        iyz="-4.5317897E-09"
-        izz="0.0038687049" />
+        ixx="0.013847"
+        ixy="-1.0562E-07"
+        ixz="4.372E-10"
+        iyy="0.027351"
+        iyz="-3.2677E-08"
+        izz="0.013847" />
     </inertial>
     <visual>
       <origin
@@ -182,7 +182,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="../meshes/left_wheel.STL" />
+          filename="package://diablo_plus_pro/meshes/left_wheel_link.STL" />
       </geometry>
       <material
         name="">
@@ -196,7 +196,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="../meshes/left_wheel.STL" />
+          filename="package://diablo_plus_pro/meshes/left_wheel_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -204,23 +204,25 @@
     name="left_wheel_joint"
     type="revolute">
     <origin
-      xyz="0.16611 0.02266 -0.11138"
+      xyz="0.17064 0.02266 0.10432"
       rpy="0 0 0" />
     <parent
-      link="left_knee" />
+      link="left_knee_link" />
     <child
-      link="left_wheel" />
+      link="left_wheel_link" />
     <axis
       xyz="0 1 0" />
     <limit
+      lower="0"
+      upper="0"
       effort="20"
       velocity="30" />
   </joint>
   <link
-    name="right_hip">
+    name="right_hip_link">
     <inertial>
       <origin
-        xyz="-0.03368 -0.083816 -0.025625"
+        xyz="-0.02147 -0.083955 -0.036946"
         rpy="0 0 0" />
       <mass
         value="2.0" />
@@ -238,7 +240,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="../meshes/right_hip.STL" />
+          filename="package://diablo_plus_pro/meshes/right_hip_link.STL" />
       </geometry>
       <material
         name="">
@@ -252,7 +254,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="../meshes/right_hip.STL" />
+          filename="package://diablo_plus_pro/meshes/right_hip_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -265,7 +267,7 @@
     <parent
       link="base_link" />
     <child
-      link="right_hip" />
+      link="right_hip_link" />
     <axis
       xyz="0 1 0" />
     <limit
@@ -275,10 +277,10 @@
       velocity="10" />
   </joint>
   <link
-    name="right_knee">
+    name="right_knee_link">
     <inertial>
       <origin
-        xyz="0.085339 -0.0022639 -0.069432"
+        xyz="0.091173 -0.0018038 0.042402"
         rpy="0 0 0" />
       <mass
         value="2.0" />
@@ -296,7 +298,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="../meshes/right_knee.STL" />
+          filename="package://diablo_plus_pro/meshes/right_knee_link.STL" />
       </geometry>
       <material
         name="">
@@ -310,7 +312,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="../meshes/right_knee.STL" />
+          filename="package://diablo_plus_pro/meshes/right_knee_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -318,12 +320,12 @@
     name="right_knee_joint"
     type="revolute">
     <origin
-      xyz="-0.15071 -0.10364 -0.13147"
+      xyz="-0.088029 -0.10364 -0.17958"
       rpy="0 0 0" />
     <parent
-      link="right_hip" />
+      link="right_hip_link" />
     <child
-      link="right_knee" />
+      link="right_knee_link" />
     <axis
       xyz="0 1 0" />
     <limit
@@ -333,20 +335,20 @@
       velocity="10" />
   </joint>
   <link
-    name="right_wheel">
+    name="right_wheel_link">
     <inertial>
       <origin
-        xyz="-1.1629E-05 -0.017953 -6.6772E-06"
+        xyz="7.6456E-08 -0.019153 -2.0799E-06"
         rpy="0 0 0" />
       <mass
-        value="1.63" />
+        value="2.00" />
       <inertia
-        ixx="0.0038687294"
-        ixy="3.4674606E-07"
-        ixz="-6.1772612E-09"
-        iyy="0.0073579312"
-        iyz="-4.5317897E-09"
-        izz="0.0038687049" />
+        ixx="0.013847"
+        ixy="4.8112E-09"
+        ixz="-1.9773E-09"
+        iyy="0.027351"
+        iyz="1.0933E-07"
+        izz="0.013847" />
     </inertial>
     <visual>
       <origin
@@ -354,7 +356,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="../meshes/right_wheel.STL" />
+          filename="package://diablo_plus_pro/meshes/right_wheel_link.STL" />
       </geometry>
       <material
         name="">
@@ -368,7 +370,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="../meshes/right_wheel.STL" />
+          filename="package://diablo_plus_pro/meshes/right_wheel_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -376,15 +378,17 @@
     name="right_wheel_joint"
     type="revolute">
     <origin
-      xyz="0.1666 -0.03046 -0.11066"
+      xyz="0.17064 -0.03046 0.10432"
       rpy="0 0 0" />
     <parent
-      link="right_knee" />
+      link="right_knee_link" />
     <child
-      link="right_wheel" />
+      link="right_wheel_link" />
     <axis
       xyz="0 1 0" />
     <limit
+      lower="0"
+      upper="0"
       effort="20"
       velocity="30" />
   </joint>
