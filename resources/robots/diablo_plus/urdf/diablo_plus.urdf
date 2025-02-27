@@ -3,7 +3,34 @@
      Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot
-  name="diablo_plus2">
+  name="diablo_plus">
+  <material name="black">
+      <color rgba="0.0 0.0 0.0 1.0"/>
+  </material>
+  <material name="blue">
+      <color rgba="0.0 0.0 0.8 1.0"/>
+  </material>
+  <material name="green">
+      <color rgba="0.0 0.8 0.0 1.0"/>
+  </material>
+  <material name="grey">
+      <color rgba="0.2 0.2 0.2 1.0"/>
+  </material>
+  <material name="silver">
+      <color rgba="0.9137254901960784 0.9137254901960784 0.8470588235294118 1.0"/>
+  </material>
+  <material name="orange">
+      <color rgba="1.0 0.4235294117647059 0.0392156862745098 1.0"/>
+  </material>
+  <material name="brown">
+      <color rgba="0.8705882352941177 0.8117647058823529 0.7647058823529411 1.0"/>
+  </material>
+  <material name="red">
+      <color rgba="0.8 0.0 0.0 1.0"/>
+  </material>
+  <material name="white">
+      <color rgba="1.0 1.0 1.0 1.0"/>
+  </material>
   <link
     name="base_link">
     <inertial>
@@ -184,19 +211,16 @@
         <mesh
           filename="../meshes/left_wheel.STL" />
       </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
+      <material name="orange">
+          <color rgba="1.0 0.4235294117647059 0.0392156862745098 1.0"/>
       </material>
     </visual>
     <collision>
       <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
+        xyz="0 0.02 0"
+        rpy="1.5707963 0 0" />
       <geometry>
-        <mesh
-          filename="../meshes/left_wheel.STL" />
+          <cylinder radius="0.086" length="0.035"/>
       </geometry>
     </collision>
   </link>
@@ -356,19 +380,16 @@
         <mesh
           filename="../meshes/right_wheel.STL" />
       </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
+      <material name="orange">
+          <color rgba="1.0 0.4235294117647059 0.0392156862745098 1.0"/>
       </material>
     </visual>
     <collision>
       <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
+        xyz="0 -0.02 0"
+        rpy="1.5707963 0 0" />
       <geometry>
-        <mesh
-          filename="../meshes/right_wheel.STL" />
+          <cylinder radius="0.086" length="0.035"/>
       </geometry>
     </collision>
   </link>

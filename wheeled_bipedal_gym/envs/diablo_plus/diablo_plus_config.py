@@ -44,7 +44,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
         # mesh_type = "plane"
         # mesh_type = "trimesh"  # "heightfield" # none, plane, heightfield or trimesh
         horizontal_scale = 0.1  # [m]
-        vertical_scale = 0.05  # [m]
+        vertical_scale = 0.005  # [m]
         border_size = 25  # [m]
         curriculum = True
         static_friction = 0.5
@@ -74,7 +74,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
         num_rows = 20  # number of terrain rows (levels)
         num_cols = 20  # number of terrain cols (types)
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete]
-        terrain_proportions = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0]#分别对应上面地形的比例
+        terrain_proportions = [0.1, 0.1, 0.35, 0.25, 0.2]
         # trimesh only:
         slope_treshold = (
             0.75  # slopes above this threshold will be corrected to vertical surfaces
@@ -188,14 +188,14 @@ class DiabloPlusCfg(WheeledBipedalCfg):
         class scales(WheeledBipedalCfg.rewards.scales):
             tracking_lin_vel = 10.0
             tracking_lin_vel_enhance = 1
-            tracking_ang_vel = 2.0
+            tracking_ang_vel = 5.0
 
             base_height = 5.0
             base_height_enhance = 1
-            nominal_state = -2.0
+            nominal_state = -10.0
             lin_vel_z = -2.0
             ang_vel_xy = -0.0
-            orientation = -10.0
+            orientation = -5.0
 
             dof_vel = -5e-5
             dof_acc = -2.5e-7
@@ -210,7 +210,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
             theta_limit = -0.01
             same_l = 0.1e-5
             wheel_vel = -0.5
-            no_fly = 0.5
+            # no_fly = 0.5
 
         only_positive_rewards = False  # if true negative total rewards are clipped at zero (avoids early termination problems)
         clip_single_reward = 1
