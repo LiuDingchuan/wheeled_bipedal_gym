@@ -4,6 +4,33 @@
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot
   name="diablo_plus_pro">
+  <material name="black">
+      <color rgba="0.0 0.0 0.0 1.0"/>
+  </material>
+  <material name="blue">
+      <color rgba="0.0 0.0 0.8 1.0"/>
+  </material>
+  <material name="green">
+      <color rgba="0.0 0.8 0.0 1.0"/>
+  </material>
+  <material name="grey">
+      <color rgba="0.2 0.2 0.2 1.0"/>
+  </material>
+  <material name="silver">
+      <color rgba="0.9137254901960784 0.9137254901960784 0.8470588235294118 1.0"/>
+  </material>
+  <material name="orange">
+      <color rgba="1.0 0.4235294117647059 0.0392156862745098 1.0"/>
+  </material>
+  <material name="brown">
+      <color rgba="0.8705882352941177 0.8117647058823529 0.7647058823529411 1.0"/>
+  </material>
+  <material name="red">
+      <color rgba="0.8 0.0 0.0 1.0"/>
+  </material>
+  <material name="white">
+      <color rgba="1.0 1.0 1.0 1.0"/>
+  </material>
   <link
     name="base_link">
     <inertial>
@@ -26,7 +53,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://diablo_plus_pro/meshes/base_link.STL" />
+          filename="../meshes/base_link.STL" />
       </geometry>
       <material
         name="">
@@ -40,7 +67,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://diablo_plus_pro/meshes/base_link.STL" />
+          filename="../meshes/base_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -66,7 +93,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://diablo_plus_pro/meshes/left_hip_link.STL" />
+          filename="../meshes/left_hip_link.STL" />
       </geometry>
       <material
         name="">
@@ -80,7 +107,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://diablo_plus_pro/meshes/left_hip_link.STL" />
+          filename="../meshes/left_hip_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -97,10 +124,10 @@
     <axis
       xyz="0 1 0" />
     <limit
-      lower="-3.14"
-      upper="3.14"
-      effort="100"
-      velocity="10" />
+      lower="-1.0"
+      upper="1.2"
+      effort="80"
+      velocity="15" />
   </joint>
   <link
     name="left_knee_link">
@@ -124,7 +151,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://diablo_plus_pro/meshes/left_knee_link.STL" />
+          filename="../meshes/left_knee_link.STL" />
       </geometry>
       <material
         name="">
@@ -138,7 +165,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://diablo_plus_pro/meshes/left_knee_link.STL" />
+          filename="../meshes/left_knee_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -154,11 +181,11 @@
       link="left_knee_link" />
     <axis
       xyz="0 1 0" />
-    <limit
-      lower="-3.14"
-      upper="3.14"
-      effort="100"
-      velocity="10" />
+    <limit 
+      lower="0"
+      upper="1.6"
+      effort="80"
+      velocity="15" />
   </joint>
   <link
     name="left_wheel_link">
@@ -182,21 +209,18 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://diablo_plus_pro/meshes/left_wheel_link.STL" />
+          filename="../meshes/left_wheel_link.STL" />
       </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
+      <material name="orange">
+          <color rgba="1.0 0.4235294117647059 0.0392156862745098 1.0"/>
       </material>
     </visual>
     <collision>
       <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
+        xyz="0 0.02 0"
+        rpy="1.5707963 0 0" />
       <geometry>
-        <mesh
-          filename="package://diablo_plus_pro/meshes/left_wheel_link.STL" />
+        <cylinder radius="0.16" length="0.035"/>
       </geometry>
     </collision>
   </link>
@@ -213,8 +237,6 @@
     <axis
       xyz="0 1 0" />
     <limit
-      lower="0"
-      upper="0"
       effort="20"
       velocity="30" />
   </joint>
@@ -240,7 +262,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://diablo_plus_pro/meshes/right_hip_link.STL" />
+          filename="../meshes/right_hip_link.STL" />
       </geometry>
       <material
         name="">
@@ -254,7 +276,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://diablo_plus_pro/meshes/right_hip_link.STL" />
+          filename="../meshes/right_hip_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -271,10 +293,10 @@
     <axis
       xyz="0 1 0" />
     <limit
-      lower="-3.14"
-      upper="3.14"
-      effort="100"
-      velocity="10" />
+      lower="-1.0"
+      upper="1.2"
+      effort="80"
+      velocity="15" />  
   </joint>
   <link
     name="right_knee_link">
@@ -298,7 +320,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://diablo_plus_pro/meshes/right_knee_link.STL" />
+          filename="../meshes/right_knee_link.STL" />
       </geometry>
       <material
         name="">
@@ -312,7 +334,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://diablo_plus_pro/meshes/right_knee_link.STL" />
+          filename="../meshes/right_knee_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -329,10 +351,10 @@
     <axis
       xyz="0 1 0" />
     <limit
-      lower="-3.14"
-      upper="3.14"
-      effort="100"
-      velocity="10" />
+      lower="0"
+      upper="1.6"
+      effort="80"
+      velocity="15" />
   </joint>
   <link
     name="right_wheel_link">
@@ -356,21 +378,18 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://diablo_plus_pro/meshes/right_wheel_link.STL" />
+          filename="../meshes/right_wheel_link.STL" />
       </geometry>
-      <material
-        name="">
-        <color
-          rgba="1 1 1 1" />
+      <material name="orange">
+          <color rgba="1.0 0.4235294117647059 0.0392156862745098 1.0"/>
       </material>
     </visual>
     <collision>
       <origin
-        xyz="0 0 0"
-        rpy="0 0 0" />
+        xyz="0 -0.02 0"
+        rpy="1.5707963 0 0" />
       <geometry>
-        <mesh
-          filename="package://diablo_plus_pro/meshes/right_wheel_link.STL" />
+        <cylinder radius="0.16" length="0.035"/>
       </geometry>
     </collision>
   </link>
@@ -387,8 +406,6 @@
     <axis
       xyz="0 1 0" />
     <limit
-      lower="0"
-      upper="0"
       effort="20"
       velocity="30" />
   </joint>

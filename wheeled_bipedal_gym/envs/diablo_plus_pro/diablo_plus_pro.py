@@ -1,3 +1,11 @@
+'''
+Description: 
+Version: 2.0
+Author: Dandelion
+Date: 2025-02-25 21:17:45
+LastEditTime: 2025-02-28 21:46:37
+FilePath: /wheeled_bipedal_gym/wheeled_bipedal_gym/envs/diablo_plus_pro/diablo_plus_pro.py
+'''
 # SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -54,7 +62,7 @@ from wheeled_bipedal_gym.utils.helpers import class_to_dict
 from wheeled_bipedal_gym.envs.base.wheeled_bipedal_config import WheeledBipedalCfg
 
 
-class DiabloPlus(BaseTask):
+class DiabloPlusPro(BaseTask):
 
     def __init__(
         self, cfg: WheeledBipedalCfg, sim_params, physics_engine, sim_device, headless
@@ -152,18 +160,19 @@ class DiabloPlus(BaseTask):
         # change from original for the joint tf is different！
         self.theta1 = torch.cat(
             (
-                self.dof_pos[:, 0].unsqueeze(1)  + self.pi - 0.722392,
-                self.dof_pos[:, 3].unsqueeze(1)  + self.pi - 0.722392,
+                self.dof_pos[:, 0].unsqueeze(1) + self.pi - 1.115091,
+                self.dof_pos[:, 3].unsqueeze(1) + self.pi - 1.115091,
             ),
             dim=1,
         )
         self.theta2 = torch.cat(
             (
-                (self.dof_pos[:, 1].unsqueeze(1) - self.pi + 1.311441),
-                (self.dof_pos[:, 4].unsqueeze(1) - self.pi + 1.311441),
+                (self.dof_pos[:, 1].unsqueeze(1) - (self.pi - 0.566359342)),
+                (self.dof_pos[:, 4].unsqueeze(1) - (self.pi - 0.566359342)),
             ),
             dim=1,
         )
+
         self.L0, self.theta0 = self.forward_kinematics()
         self.L0_dot, self.theta0_dot = self.calculate_vmc_vel()
 
@@ -215,11 +224,12 @@ class DiabloPlus(BaseTask):
             + self.cfg.asset.l1 * torch.cos(self.theta1)
             + self.cfg.asset.l2 * torch.cos(self.theta1 + self.theta2)
         )
-        end_y = (self.cfg.asset.l1 * torch.sin(self.theta1) 
-                + self.cfg.asset.l2 * torch.sin(self.theta1 + self.theta2))
+        end_y = self.cfg.asset.l1 * torch.sin(
+            self.theta1
+        ) + self.cfg.asset.l2 * torch.sin(self.theta1 + self.theta2)
+        # print("end_x:", end_x, "end_y:", end_y)
         L0 = torch.sqrt(end_x**2 + end_y**2)
         theta0 = torch.arctan2(end_y, end_x) - self.pi / 2
-        # print("end_x:", end_x, "end_y:", end_y)
         return L0, theta0
 
     def calculate_vmc_vel(self):
@@ -401,7 +411,7 @@ class DiabloPlus(BaseTask):
         )
         return obs_buf
 
-    # 计算obs的值（同时包括噪声）To do
+    # 计算obs的值（同时包括噪声）
     def compute_observations(self):
         """Computes observations"""
         self.obs_buf = self.compute_proprioception_observations()
@@ -720,8 +730,8 @@ class DiabloPlus(BaseTask):
         """
         # pd controller
         pos_ref = actions * self.cfg.control.pos_action_scale
-        pos_ref[:, 2] *= 0
-        pos_ref[:, 5] *= 0
+        # pos_ref[:, 2] *= 0
+        # pos_ref[:, 5] *= 0
         vel_ref = actions * self.cfg.control.vel_action_scale
         vel_ref[:, :2] *= 0
         vel_ref[:, 3:5] *= 0
@@ -729,17 +739,18 @@ class DiabloPlus(BaseTask):
             pos_ref + self.default_dof_pos - self.dof_pos
         ) + self.d_gains * (vel_ref - self.dof_vel)
 
-        T1, T2 = self.compute_motor_torque(self.cfg.control.feedforward_force, 0.0)
+        # T1, T2 = self.compute_motor_torque(self.cfg.control.feedforward_force, 0.0)
 
-        torques[:, 0] += T1[:, 0]  # left_hip
-        torques[:, 3] += T1[:, 1]  # right_hip
-        torques[:, 1] += T2[:, 0]  # left_knee
-        torques[:, 4] += T2[:, 1]  # right_knee
+        # torques[:, 0] += T1[:, 0]  # left_hip
+        # torques[:, 3] += T1[:, 1]  # right_hip
+        # torques[:, 1] += T2[:, 0]  # left_knee
+        # torques[:, 4] += T2[:, 1]  # right_knee
 
         return torch.clip(
             torques * self.torques_scale, -self.torque_limits, self.torque_limits
         )
-
+    
+    #VMC方法
     def compute_motor_torque(self, F, T):
         l1 = self.cfg.asset.l1
         l2 = self.cfg.asset.l2
@@ -1712,16 +1723,22 @@ class DiabloPlus(BaseTask):
 
     def _reward_orientation(self):
         # Penalize non flat base orientation
-        return torch.sum(torch.square(self.projected_gravity[:, :2]), dim=1)
+        # return torch.sum(torch.square(self.projected_gravity[:, :2]), dim=1)
+        return torch.norm(self.projected_gravity[:, :2], dim=1) > 0.1
 
+    # def _reward_base_height(self):
+    #     # Penalize base height away from target
+    #     # print(self.commands[0, 2], self.base_height[0])
+    #     if self.reward_scales["base_height"] < 0:
+    #         return torch.abs(self.base_height - self.commands[:, 2])
+    #     else:
+    #         base_height_error = torch.square(self.base_height - self.commands[:, 2])
+    #         return torch.exp(-base_height_error / 0.001)
     def _reward_base_height(self):
         # Penalize base height away from target
-        # print(self.commands[0, 2], self.base_height[0])
-        if self.reward_scales["base_height"] < 0:
-            return torch.abs(self.base_height - self.commands[:, 2])
-        else:
-            base_height_error = torch.square(self.base_height - self.commands[:, 2])
-            return torch.exp(-base_height_error / 0.001)
+        base_height = torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights, dim=1)
+        # return torch.square(base_height - self.cfg.rewards.base_height_target)
+        return torch.abs(torch.clip(base_height - self.cfg.rewards.base_height_target, -1, 0))
 
     def _reward_base_height_enhance(self):
         base_height_error = torch.square(self.base_height - self.commands[:, 2])
@@ -1863,6 +1880,11 @@ class DiabloPlus(BaseTask):
             dim=1,
         )
 
+    # def _reward_stand_still(self):
+    #     # Penalize motion at zero commands
+    #     return torch.sum(torch.abs(self.dof_pos - self.default_dof_pos), dim=1) * (
+    #         torch.norm(self.commands[:, :2], dim=1) < 0.1
+    #     )
     def _reward_stand_still(self):
         # Penalize motion at zero commands
         return torch.sum(torch.abs(self.dof_pos - self.default_dof_pos), dim=1) * (
@@ -1965,6 +1987,10 @@ class DiabloPlus(BaseTask):
         contacts = self.contact_forces[:, self.feet_indices, 2] > 0.1
         rew = 1.0 * (torch.sum(1.0 * contacts, dim=1) == 2)  # 检查是不是两腿都在地上
         return rew
+    
+    def _reward_survival(self):
+        return (~self.reset_buf).float() * self.dt
+
 
     # def _reward_block_wheel_tau(self):
     #     return torch.sum(torch.square(self.dof_vel[:, 2]) + torch.square(self.dof_vel[:, 5]))

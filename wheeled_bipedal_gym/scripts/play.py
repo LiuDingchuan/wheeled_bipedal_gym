@@ -50,14 +50,14 @@ def play(args):
     # override some parameters for testing
     env_cfg.env.episode_length_s = 20
     env_cfg.env.fail_to_terminal_time_s = 3
-    env_cfg.env.num_envs = min(env_cfg.env.num_envs, 10)
-    env_cfg.terrain.mesh_type='trimesh'
+    env_cfg.env.num_envs = min(env_cfg.env.num_envs, 1)
+    env_cfg.terrain.mesh_type='plane'
     env_cfg.terrain.num_rows = 2
     env_cfg.terrain.num_cols = 2
     # env_cfg.terrain.max_init_terrain_level = env_cfg.terrain.num_rows - 1
     env_cfg.terrain.curriculum = False
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete]
-    env_cfg.terrain.terrain_proportions = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0]#分别对应上面地形的比例
+    env_cfg.terrain.terrain_proportions = [0.0, 0.0, 1.0, 0.0, 0.0]#分别对应上面地形的比例
     env_cfg.noise.add_noise = False
     env_cfg.domain_rand.randomize_friction = False
     env_cfg.domain_rand.friction_range = [0.5, 1.0]
@@ -117,7 +117,7 @@ def play(args):
         else:
             actions = policy(obs.detach())
 
-        env.commands[:, 0] = 0.5
+        env.commands[:, 0] = 0.0
         env.commands[:, 1] = 0.0
         env.commands[:, 2] = 0.25  # + 0.07 * np.sin(i * 0.01)
         # env.commands[:, 3] = 1.5708
@@ -137,6 +137,19 @@ def play(args):
             env.commands[:, 0] = vel_cmd + vel_err_intergral
 
         obs, _, rews, dones, infos, obs_history = env.step(actions)
+
+        # 输出机器人的 dof_pos 等信息
+        print("Step:", i, 
+              "DOF0:", np.round(env.dof_pos[:, 0].cpu().numpy(), 3), 
+              "DOF1:", np.round(env.dof_pos[:, 1].cpu().numpy(), 3),
+              "theta1:", np.round(env.theta1.cpu().numpy(), 3),
+              "theta2:", np.round(env.theta2.cpu().numpy(), 3),
+              "theta0:", np.round(env.theta0.cpu().numpy(), 3),
+              "L0:", np.round(env.L0.cpu().numpy(), 3))     
+        # print("Step:", i, 
+        #       "DOF0:", np.round(env.dof_pos[:, 0].cpu().numpy(), 3), 
+        #       "root_height:", np.round(env.root_states[:, 2].cpu().numpy(), 3),
+        #       "me_height:", np.round(env.measured_heights.cpu().numpy(), 3))      
         if RECORD_FRAMES:
             if i % 2:
                 filename = os.path.join(
