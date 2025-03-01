@@ -3,7 +3,7 @@ Description:
 Version: 2.0
 Author: Dandelion
 Date: 2025-02-25 21:17:59
-LastEditTime: 2025-02-28 21:52:32
+LastEditTime: 2025-02-28 22:17:49
 FilePath: /wheeled_bipedal_gym/wheeled_bipedal_gym/envs/diablo_plus_pro/diablo_plus_pro_config.py
 '''
 # SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
@@ -70,7 +70,7 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
         num_rows = 20  # number of terrain rows (levels)
         num_cols = 20  # number of terrain cols (types)
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete]
-        terrain_proportions = [0.0, 0.1, 0.2, 0.5, 0.2, 0.0]#分别对应上面地形的比例
+        terrain_proportions = [0.1, 0.2, 0.35, 0.2, 0.15]#分别对应上面地形的比例
         # trimesh only:
         slope_treshold = (
             0.75  # slopes above this threshold will be corrected to vertical surfaces
@@ -119,11 +119,12 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
             "wheel": 0.8,
         }  # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
-        action_scale = 0.5
+        action_scale = 0.5 #通过缩放，可以确保策略网络输出的动作在合理范围内
+        pos_action_scale = 0.25
+        vel_action_scale = 8.0
+
         # decimation: Number of control action updates @ sim DT per policy DT
         decimation = 2  # 它表示每个仿真间隔dt内policy的更新次数，它和sim里面的dt联合决定了这个控制模型的频率。为dt*decimation
-        pos_action_scale = 0.5
-        vel_action_scale = 10.0
         feedforward_force = 60.0
 
     # 定义机器人模型内容，例如URDF和一些上下限
@@ -162,13 +163,13 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
         push_robots = True
         push_interval_s = 7
         max_push_vel_xy = 2.0
-        randomize_Kp = True
+        randomize_Kp = False
         randomize_Kp_range = [0.9, 1.1]
-        randomize_Kd = True
+        randomize_Kd = False
         randomize_Kd_range = [0.9, 1.1]
         randomize_motor_torque = True
         randomize_motor_torque_range = [0.9, 1.1]
-        randomize_default_dof_pos = True
+        randomize_default_dof_pos = False
         randomize_default_dof_pos_range = [-0.3, 0.3]
         randomize_action_delay = True
         delay_ms_range = [0, 10]
@@ -185,7 +186,7 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
             nominal_state = -2.0
             lin_vel_z = -2.0
             ang_vel_xy = -0.0
-            orientation = -10.0
+            orientation = -10.0 # 很重要，不加的话会导致存活时间下降（FROM 逐迹）
 
             dof_vel = -5e-5
             dof_acc = -2.5e-7
@@ -203,8 +204,7 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
             same_l = 0.1e-5
             wheel_vel = -0.5
             no_fly = 0.5
-            survival = 100
-            
+            survival = 0.1
 
         only_positive_rewards = False  # if true negative total rewards are clipped at zero (avoids early termination problems)
         clip_single_reward = 1
