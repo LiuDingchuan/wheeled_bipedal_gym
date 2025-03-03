@@ -3,7 +3,7 @@ Description:
 Version: 2.0
 Author: Dandelion
 Date: 2025-02-25 21:17:45
-LastEditTime: 2025-02-28 21:46:37
+LastEditTime: 2025-03-01 17:46:04
 FilePath: /wheeled_bipedal_gym/wheeled_bipedal_gym/envs/diablo_plus_pro/diablo_plus_pro.py
 '''
 # SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
@@ -676,7 +676,7 @@ class DiabloPlusPro(BaseTask):
         if self.cfg.terrain.measure_heights:
             self.measured_heights = self._get_heights()
         self.base_height = torch.mean(
-            self.root_states[:, 2].unsqueeze(1) - self.measured_heights, dim=1
+            self.root_states[:, 2].unsqueeze(1) - self.measured_heights - self.cfg.asset.foot_radius, dim=1
         )
 
     def _resample_commands(self, env_ids):
@@ -1165,7 +1165,7 @@ class DiabloPlusPro(BaseTask):
             self.height_points = self._init_height_points()
         self.measured_heights = 0
         self.base_height = torch.mean(
-            self.root_states[:, 2].unsqueeze(1) - self.measured_heights, dim=1
+            self.root_states[:, 2].unsqueeze(1) - self.measured_heights - self.cfg.asset.foot_radius, dim=1
         )
 
         self.L0 = torch.zeros(
@@ -1736,9 +1736,7 @@ class DiabloPlusPro(BaseTask):
     #         return torch.exp(-base_height_error / 0.001)
     def _reward_base_height(self):
         # Penalize base height away from target
-        base_height = torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights, dim=1)
-        # return torch.square(base_height - self.cfg.rewards.base_height_target)
-        return torch.abs(torch.clip(base_height - self.cfg.rewards.base_height_target, -1, 0))
+        return torch.abs(torch.clip(self.base_height - self.cfg.rewards.base_height_target, -1, 0))
 
     def _reward_base_height_enhance(self):
         base_height_error = torch.square(self.base_height - self.commands[:, 2])
@@ -1921,14 +1919,12 @@ class DiabloPlusPro(BaseTask):
 
     def _reward_wheel_vel(self):
         # Penalize dof velocities
-        R = 0.085
+        R = self.cfg.asset.foot_radius
         left_wheel_v_set = self.commands[:, 0] - self.commands[:, 1]
         right_wheel_v_set = self.commands[:, 0] + self.commands[:, 1]
         return torch.sum(
             torch.square(self.dof_vel[:, 2] / R - left_wheel_v_set)
-            + torch.square(self.dof_vel[:, 5]) / R
-            - right_wheel_v_set
-        )
+            + torch.square(self.dof_vel[:, 5] / R- right_wheel_v_set))
         # return torch.sum(torch.square(self.dof_vel[:, [2, 5]]), dim=1)
 
     def _reward_block_l(self):
@@ -1989,8 +1985,20 @@ class DiabloPlusPro(BaseTask):
         return rew
     
     def _reward_survival(self):
-        return (~self.reset_buf).float() * self.dt
-
+        # return (~self.reset_buf).float() * self.dt
+        return (self.episode_length_buf * self.dt) > 10
+    
+    def _reward_wheel_adjustment(self):
+        # 鼓励使用轮子的滑动克服前后的倾斜，奖励轮速和倾斜方向一致的情况，并要求轮速方向也一致
+        incline_x = self.projected_gravity[:, 0]
+        # mean velocity
+        wheel_x_mean = (self.dof_vel[:, 2] + self.dof_vel[:, 5]) / 2
+        # 两边轮速方向不一致的情况，不给奖励
+        wheel_x_invalid = (self.dof_vel[:, 2] * self.dof_vel[:, 5]) < 0
+        wheel_x_mean[wheel_x_invalid] = 0.0
+        wheel_x_mean = wheel_x_mean.reshape(-1)
+        reward = incline_x * wheel_x_mean > 0
+        return reward
 
     # def _reward_block_wheel_tau(self):
     #     return torch.sum(torch.square(self.dof_vel[:, 2]) + torch.square(self.dof_vel[:, 5]))

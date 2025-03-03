@@ -50,7 +50,7 @@ def play(args):
     # override some parameters for testing
     env_cfg.env.episode_length_s = 20
     env_cfg.env.fail_to_terminal_time_s = 3
-    env_cfg.env.num_envs = min(env_cfg.env.num_envs, 20)
+    env_cfg.env.num_envs = min(env_cfg.env.num_envs, 10)
     env_cfg.terrain.mesh_type='trimesh'
     env_cfg.terrain.num_rows = 2
     env_cfg.terrain.num_cols = 2
@@ -117,7 +117,7 @@ def play(args):
         else:
             actions = policy(obs.detach())
 
-        env.commands[:, 0] = 1.0
+        env.commands[:, 0] = 0.0
         env.commands[:, 1] = 0.0
         env.commands[:, 2] = 0.25  # + 0.07 * np.sin(i * 0.01)
         # env.commands[:, 3] = 1.5708
@@ -148,7 +148,8 @@ def play(args):
         #       "L0:", np.round(env.L0.cpu().numpy(), 3))     
         # print("Step:", i, 
         #       "DOF0:", np.round(env.dof_pos[:, 0].cpu().numpy(), 3), 
-        #       "root_height:", np.round(env.root_states[:, 2].cpu().numpy(), 3),
+        #       "root_height:", np.round(env.root_states[:, 2].unsqueeze(1).cpu().numpy(), 3),
+        #       "base_height:", np.round(env.base_height.cpu().numpy(), 3),
         #       "me_height:", np.round(env.measured_heights.cpu().numpy(), 3))      
         if RECORD_FRAMES:
             if i % 2:

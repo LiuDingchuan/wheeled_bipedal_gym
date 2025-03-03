@@ -145,6 +145,7 @@ class WheeledBipedalCfg(BaseConfig):
         self_collisions = 1  # 1 to disable, 0 to enable...bitwise filter
         flip_visual_attachments = False
         foot_name = "None"  # name of the feet bodies, used to index body state and contact force tensors
+        foot_radius = 0.0
         disable_gravity = False
         collapse_fixed_joints = True  # merge bodies connected by fixed joints. Specific fixed joints can be kept by adding " <... dont_collapse="true">
         fix_base_link = False  # fixe the base of the robot

@@ -3,7 +3,7 @@ Description:
 Version: 2.0
 Author: Dandelion
 Date: 2025-02-25 21:17:59
-LastEditTime: 2025-02-28 22:17:49
+LastEditTime: 2025-03-01 17:48:25
 FilePath: /wheeled_bipedal_gym/wheeled_bipedal_gym/envs/diablo_plus_pro/diablo_plus_pro_config.py
 '''
 # SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
@@ -132,6 +132,7 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
         file = "{WHEELED_BIPEDAL_GYM_ROOT_DIR}/resources/robots/diablo_plus_pro/urdf/diablo_plus_pro.urdf"
         name = "diablo_plus_pro"
         foot_name = "wheel"
+        foot_radius = 0.16
         offset = 0.0
         l1 = 0.2
         l2 = 0.2
@@ -179,11 +180,12 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
         class scales(WheeledBipedalCfg.rewards.scales):
             tracking_lin_vel = 10.0
             tracking_lin_vel_enhance = 1
-            tracking_ang_vel = 2.0
+            tracking_ang_vel = 5.0
 
             base_height = 5.0
-            base_height_enhance = 1
+            base_height_enhance = 0 #off
             nominal_state = -2.0
+            wheel_adjustment = 1.0
             lin_vel_z = -2.0
             ang_vel_xy = -0.0
             orientation = -10.0 # 很重要，不加的话会导致存活时间下降（FROM 逐迹）
@@ -196,12 +198,12 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
             action_smooth = -0.03
 
             collision = -1000.0
-            dof_pos_limits = -1.0
-            dof_vel_limits = -1.0
+            dof_pos_limits = -2.0
+            dof_vel_limits = 0.0
             # stand_still = -1.0
 
             theta_limit = -0.01
-            same_l = 0.1e-5
+            same_l = 1e-6
             wheel_vel = -0.5
             no_fly = 0.5
             survival = 0.1
@@ -212,6 +214,7 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
         soft_dof_pos_limit = 0.95  # percentage of urdf limits, values above this limit are penalized       
         soft_dof_vel_limit = 0.9
         soft_torque_limit = 0.8
+        base_height_target = 0.25  # [m]
         max_contact_force = 100.0  # forces above this value are penalized
 
     class normalization(WheeledBipedalCfg.normalization):
@@ -247,3 +250,4 @@ class DiabloPlusProCfgPPO(WheeledBipedalCfgPPO):
     class runner(WheeledBipedalCfgPPO.runner):
         # logging
         experiment_name = "diablo_plus_pro"
+        max_iterations = 10000
