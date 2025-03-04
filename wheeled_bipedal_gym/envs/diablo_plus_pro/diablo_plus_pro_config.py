@@ -3,7 +3,7 @@ Description:
 Version: 2.0
 Author: Dandelion
 Date: 2025-02-25 21:17:59
-LastEditTime: 2025-03-01 17:48:25
+LastEditTime: 2025-03-04 16:20:55
 FilePath: /wheeled_bipedal_gym/wheeled_bipedal_gym/envs/diablo_plus_pro/diablo_plus_pro_config.py
 '''
 # SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
@@ -45,6 +45,8 @@ from wheeled_bipedal_gym.envs.base.wheeled_bipedal_config import (
 class DiabloPlusProCfg(WheeledBipedalCfg):
     class env(WheeledBipedalCfg.env):
         num_envs = 4096
+        num_observations = 27
+        num_privileged_obs = (num_observations + 7 * 11 + 3 + 6 * 5 + 3 + 3)
 
     # 设置地形参数
     class terrain(WheeledBipedalCfg.terrain):
@@ -67,10 +69,10 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
         max_init_terrain_level = 5  # starting curriculum state
         terrain_length = 8 #地形长度，单位：米
         terrain_width = 8 #地形宽度，单位：米  
-        num_rows = 20  # number of terrain rows (levels)
+        num_rows = 10  # number of terrain rows (levels)
         num_cols = 20  # number of terrain cols (types)
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete]
-        terrain_proportions = [0.1, 0.2, 0.35, 0.2, 0.15]#分别对应上面地形的比例
+        terrain_proportions = [0.0, 0.1, 0.2, 0.35, 0.2, 0.15]#分别对应上面地形的比例
         # trimesh only:
         slope_treshold = (
             0.75  # slopes above this threshold will be corrected to vertical surfaces
@@ -80,7 +82,7 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
         curriculum = True
         basic_max_curriculum = 2.5
         advanced_max_curriculum = 1.5
-        curriculum_threshold = 0.7
+        curriculum_threshold = 0.7 #机器人在达到一定的性能水平后，会逐渐面临更高难度的任务，从而实现课程学习的目标。
         num_commands = 3  # default: lin_vel_x, lin_vel_y, ang_vel_yaw, heading (in heading mode ang_vel_yaw is recomputed from heading error)
         resampling_time = 5.0  # time before command are changed[s]
         heading_command = False  # if true: compute ang vel command from heading error
@@ -109,13 +111,13 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
         control_type = "P"  # P: position, V: velocity, T: torques 
         # PD Drive parameters:
         stiffness = {
-            "hip": 30.0,
+            "hip": 50.0,
             "knee": 40.0,
             "wheel": 0,
         }  # [N*m/rad]
         damping = {
-            "hip": 0.4,
-            "knee": 0.5,
+            "hip": 1.5,
+            "knee": 1.0,
             "wheel": 0.8,
         }  # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
@@ -145,7 +147,8 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
             "base_link",
         ]  # 碰到地面会收到惩罚的name of Link
         terminate_after_contacts_on = [
-            "base_link"
+            "base_link",
+            "knee_link",
         ]  # 碰到地面达到一定条件（接触力&时间）后会直接提前结束当前轮的envs
 
     # 通过增加各种随机值来增加机器人的鲁棒性，
@@ -164,9 +167,9 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
         push_robots = True
         push_interval_s = 7
         max_push_vel_xy = 2.0
-        randomize_Kp = False
+        randomize_Kp = True
         randomize_Kp_range = [0.9, 1.1]
-        randomize_Kd = False
+        randomize_Kd = True
         randomize_Kd_range = [0.9, 1.1]
         randomize_motor_torque = True
         randomize_motor_torque_range = [0.9, 1.1]
@@ -179,14 +182,14 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
 
         class scales(WheeledBipedalCfg.rewards.scales):
             tracking_lin_vel = 10.0
-            tracking_lin_vel_enhance = 1
+            tracking_lin_vel_enhance = 10
             tracking_ang_vel = 5.0
 
-            base_height = 5.0
+            base_height = -20.0
             base_height_enhance = 0 #off
             nominal_state = -2.0
             wheel_adjustment = 1.0
-            lin_vel_z = -2.0
+            # lin_vel_z = -2.0
             ang_vel_xy = -0.0
             orientation = -10.0 # 很重要，不加的话会导致存活时间下降（FROM 逐迹）
 
@@ -197,24 +200,25 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
             action_rate = -0.05
             action_smooth = -0.03
 
-            collision = -1000.0
+            collision = -100.0
             dof_pos_limits = -2.0
             dof_vel_limits = 0.0
             # stand_still = -1.0
 
             theta_limit = -0.01
             same_l = 1e-6
-            wheel_vel = -0.5
-            no_fly = 0.5
-            survival = 0.1
+            # wheel_vel = -0.5
+            no_fly = 1.0
+            theta0_in_range = 1.0
+            survival = 10.0
 
         only_positive_rewards = False  # if true negative total rewards are clipped at zero (avoids early termination problems)
         clip_single_reward = 1
-        tracking_sigma = 0.25  # tracking reward = exp(-error^2/sigma) #这个值越小跟踪效果反而越好，因为这样只有当速度非常接近v_set的时候奖励才会最大
+        tracking_sigma = 0.2  # tracking reward = exp(-error^2/sigma) #这个值越小跟踪效果反而越好，因为这样只有当速度非常接近v_set的时候奖励才会最大
         soft_dof_pos_limit = 0.95  # percentage of urdf limits, values above this limit are penalized       
         soft_dof_vel_limit = 0.9
-        soft_torque_limit = 0.8
-        base_height_target = 0.25  # [m]
+        soft_torque_limit = 0.9
+        base_height_target = 0.2 # [m]
         max_contact_force = 100.0  # forces above this value are penalized
 
     class normalization(WheeledBipedalCfg.normalization):

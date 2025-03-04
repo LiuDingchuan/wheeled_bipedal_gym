@@ -3,7 +3,7 @@ Description:
 Version: 2.0
 Author: Dandelion
 Date: 2025-02-25 21:17:45
-LastEditTime: 2025-03-01 17:46:04
+LastEditTime: 2025-03-04 15:59:26
 FilePath: /wheeled_bipedal_gym/wheeled_bipedal_gym/envs/diablo_plus_pro/diablo_plus_pro.py
 '''
 # SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
@@ -406,8 +406,7 @@ class DiabloPlusPro(BaseTask):
                 (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
                 self.dof_vel * self.obs_scales.dof_vel,
                 self.actions,
-            ),
-            dim=-1,
+            ), dim=-1,
         )
         return obs_buf
 
@@ -419,7 +418,7 @@ class DiabloPlusPro(BaseTask):
         if self.cfg.env.num_privileged_obs is not None:
             heights = (
                 torch.clip(
-                    self.root_states[:, 2].unsqueeze(1) - 0.5 - self.measured_heights,
+                    self.root_states[:, 2].unsqueeze(1) - self.measured_heights,
                     -1,
                     1.0,
                 )
@@ -1736,7 +1735,7 @@ class DiabloPlusPro(BaseTask):
     #         return torch.exp(-base_height_error / 0.001)
     def _reward_base_height(self):
         # Penalize base height away from target
-        return torch.abs(torch.clip(self.base_height - self.cfg.rewards.base_height_target, -1, 0))
+        return torch.abs(torch.clip(self.base_height - self.commands[:, 2], -1, 0))
 
     def _reward_base_height_enhance(self):
         base_height_error = torch.square(self.base_height - self.commands[:, 2])
@@ -1878,11 +1877,6 @@ class DiabloPlusPro(BaseTask):
             dim=1,
         )
 
-    # def _reward_stand_still(self):
-    #     # Penalize motion at zero commands
-    #     return torch.sum(torch.abs(self.dof_pos - self.default_dof_pos), dim=1) * (
-    #         torch.norm(self.commands[:, :2], dim=1) < 0.1
-    #     )
     def _reward_stand_still(self):
         # Penalize motion at zero commands
         return torch.sum(torch.abs(self.dof_pos - self.default_dof_pos), dim=1) * (
@@ -1999,9 +1993,17 @@ class DiabloPlusPro(BaseTask):
         wheel_x_mean = wheel_x_mean.reshape(-1)
         reward = incline_x * wheel_x_mean > 0
         return reward
-
+    
     # def _reward_block_wheel_tau(self):
     #     return torch.sum(torch.square(self.dof_vel[:, 2]) + torch.square(self.dof_vel[:, 5]))
     #
     # def _reward_block_l_vel(self):
     #     return torch.sum(torch.square(self.dof_vel[:, 2]) + torch.square(self.dof_vel[:, 5]))
+
+    def _reward_theta0_in_range(self):
+        # 奖励 theta0 在合理区间的情况
+        lower_bound = -0.25  # 合理区间下界
+        upper_bound = -lower_bound   # 合理区间上界
+        in_range = (self.theta0[:, 0] > lower_bound) & (self.theta0[:, 0] < upper_bound) & \
+                   (self.theta0[:, 1] > lower_bound) & (self.theta0[:, 1] < upper_bound)
+        return in_range.float()
