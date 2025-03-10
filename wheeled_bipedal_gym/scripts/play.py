@@ -121,9 +121,9 @@ def play(args):
         else:
             actions = policy(obs.detach())
 
-        env.commands[:, 0] = 1.5
+        env.commands[:, 0] = 1.0
         env.commands[:, 1] = 0.0
-        env.commands[:, 2] = 0.18  # + 0.07 * np.sin(i * 0.01)
+        env.commands[:, 2] = 0.30  # + 0.07 * np.sin(i * 0.01)
         # env.commands[:, 3] = 1.5708
         # env.commands[:, 3] = 0.0
 
@@ -144,19 +144,21 @@ def play(args):
 
         # 输出机器人的 dof_pos 等信息
         if DEBUG_MODE:
-            # print("Step:", i, 
-            #     "DOF0:", np.round(env.dof_pos[:, 0].cpu().numpy(), 3), 
-            #     "DOF1:", np.round(env.dof_pos[:, 1].cpu().numpy(), 3),
-            #     # "theta1:", np.round(env.theta1.cpu().numpy(), 3),
-            #     # "theta2:", np.round(env.theta2.cpu().numpy(), 3),
-            #     # "theta0:", np.round(env.theta0.cpu().numpy(), 3),
-            #     'base_height', np.round(env.base_height.cpu().numpy(), 3),
-            #     "L0:", np.round(env.L0.cpu().numpy(), 3))     
             print("Step:", i, 
-                "DOF0:", np.round(env.dof_pos[:, 0].unsqueeze(1).cpu().numpy(), 3), 
-                "root_height:", np.round(env.root_states[:, 2].unsqueeze(1).cpu().numpy(), 3),
-                "base_height:", np.round(env.base_height.cpu().numpy(), 3),
-                "me_height:", np.round(env.measured_heights.cpu().numpy(), 3))      
+                # "DOF0:", np.round(env.dof_pos[:, 0].cpu().numpy(), 3), #left_hip
+                # "DOF1:", np.round(env.dof_pos[:, 1].cpu().numpy(), 3),#right_hip
+                # "DOF2:", np.round(env.dof_pos[:, 3].cpu().numpy(), 3),#left_knee
+                # "DOF3:", np.round(env.dof_pos[:, 4].cpu().numpy(), 3),#right_knee
+                "theta1:", np.round(env.theta1.cpu().numpy(), 3),
+                "theta2:", np.round(env.theta2.cpu().numpy(), 3),
+                "theta0:", np.round(env.theta0.cpu().numpy(), 3),
+                'base_height', np.round(env.base_height.cpu().numpy(), 3),
+                "L0:", np.round(env.L0.cpu().numpy(), 3))     
+            # print("Step:", i, 
+            #     "DOF0:", np.round(env.dof_pos[:, 0].unsqueeze(1).cpu().numpy(), 3), 
+            #     "root_height:", np.round(env.root_states[:, 2].unsqueeze(1).cpu().numpy(), 3),
+            #     "base_height:", np.round(env.base_height.cpu().numpy(), 3),
+            #     "me_height:", np.round(env.measured_heights.cpu().numpy(), 3))      
         if RECORD_FRAMES:
             if i % 2:
                 filename = os.path.join(

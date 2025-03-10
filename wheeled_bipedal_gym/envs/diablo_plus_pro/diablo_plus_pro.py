@@ -3,7 +3,7 @@ Description:
 Version: 2.0
 Author: Dandelion
 Date: 2025-02-25 21:17:45
-LastEditTime: 2025-03-04 15:59:26
+LastEditTime: 2025-03-10 15:50:57
 FilePath: /wheeled_bipedal_gym/wheeled_bipedal_gym/envs/diablo_plus_pro/diablo_plus_pro.py
 '''
 # SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
@@ -160,15 +160,15 @@ class DiabloPlusPro(BaseTask):
         # change from original for the joint tf is different！
         self.theta1 = torch.cat(
             (
-                self.dof_pos[:, 0].unsqueeze(1) + self.pi - 1.115091,
-                self.dof_pos[:, 3].unsqueeze(1) + self.pi - 1.115091,
+                self.dof_pos[:, 0].unsqueeze(1) + self.cfg.asset.hip_link_init_angle,
+                self.dof_pos[:, 3].unsqueeze(1) + self.cfg.asset.hip_link_init_angle,
             ),
             dim=1,
         )
         self.theta2 = torch.cat(
             (
-                (self.dof_pos[:, 1].unsqueeze(1) - (self.pi - 0.566359342)),
-                (self.dof_pos[:, 4].unsqueeze(1) - (self.pi - 0.566359342)),
+                self.dof_pos[:, 1].unsqueeze(1) + self.cfg.asset.knee_link_init_angle,
+                self.dof_pos[:, 4].unsqueeze(1) + self.cfg.asset.knee_link_init_angle,
             ),
             dim=1,
         )
@@ -675,7 +675,7 @@ class DiabloPlusPro(BaseTask):
         if self.cfg.terrain.measure_heights:
             self.measured_heights = self._get_heights()
         self.base_height = torch.mean(
-            self.root_states[:, 2].unsqueeze(1) - self.measured_heights - self.cfg.asset.foot_radius, dim=1
+            self.root_states[:, 2].unsqueeze(1) - self.measured_heights, dim=1
         )
 
     def _resample_commands(self, env_ids):
@@ -1164,7 +1164,7 @@ class DiabloPlusPro(BaseTask):
             self.height_points = self._init_height_points()
         self.measured_heights = 0
         self.base_height = torch.mean(
-            self.root_states[:, 2].unsqueeze(1) - self.measured_heights - self.cfg.asset.foot_radius, dim=1
+            self.root_states[:, 2].unsqueeze(1) - self.measured_heights, dim=1
         )
 
         self.L0 = torch.zeros(
@@ -1735,11 +1735,12 @@ class DiabloPlusPro(BaseTask):
     #         return torch.exp(-base_height_error / 0.001)
     def _reward_base_height(self):
         # Penalize base height away from target
-        return torch.abs(torch.clip(self.base_height - self.commands[:, 2], -1, 0))
+        base_height = torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights, dim=1)
+        return torch.square(base_height - self.commands[:, 2])
 
-    def _reward_base_height_enhance(self):
-        base_height_error = torch.square(self.base_height - self.commands[:, 2])
-        return torch.exp(-base_height_error / 0.001 / 10) - 1
+    # def _reward_base_height_enhance(self):
+    #     base_height_error = torch.square(self.base_height - self.commands[:, 2])
+    #     return torch.exp(-base_height_error / 0.001 / 10) - 1
 
     def _reward_torques(self):
         # Penalize torques
@@ -2000,10 +2001,28 @@ class DiabloPlusPro(BaseTask):
     # def _reward_block_l_vel(self):
     #     return torch.sum(torch.square(self.dof_vel[:, 2]) + torch.square(self.dof_vel[:, 5]))
 
-    def _reward_theta0_in_range(self):
-        # 奖励 theta0 在合理区间的情况
-        lower_bound = -0.25  # 合理区间下界
-        upper_bound = -lower_bound   # 合理区间上界
-        in_range = (self.theta0[:, 0] > lower_bound) & (self.theta0[:, 0] < upper_bound) & \
-                   (self.theta0[:, 1] > lower_bound) & (self.theta0[:, 1] < upper_bound)
-        return in_range.float()
+    # def _reward_theta0_in_range(self):
+    #     # 奖励 theta0 在合理区间的情况
+    #     lower_bound = -0.25  # 合理区间下界
+    #     upper_bound = -lower_bound   # 合理区间上界
+    #     in_range = (self.theta0[:, 0] > lower_bound) & (self.theta0[:, 0] < upper_bound) & \
+    #                (self.theta0[:, 1] > lower_bound) & (self.theta0[:, 1] < upper_bound)
+    #     return in_range.float()
+
+    def _reward_no_stagnation(self):
+        # 定义阈值
+        theta0_threshold = 0.25
+        # 定义关节速度的容差范围
+        vel_tolerance = 0.1
+        # 检查 theta0 是否超过阈值
+        theta0_exceed_left = torch.abs(self.theta0[:, 0]) > theta0_threshold
+        theta0_exceed_right = torch.abs(self.theta0[:, 1]) > theta0_threshold
+        # 检查各关节速度是否在容差范围内
+        joint_vel_near_zero_l = torch.all(torch.abs(self.dof_vel[:, [0,3]]) < vel_tolerance, dim=1)
+        joint_vel_near_zero_r = torch.all(torch.abs(self.dof_vel[:, [0,3]]) < vel_tolerance, dim=1)
+        # 如果左腿或右腿的 theta0 超过阈值且关节速度接近零，则给予惩罚
+        reward_left = ~(theta0_exceed_left & joint_vel_near_zero_l)
+        reward_right = ~(theta0_exceed_right & joint_vel_near_zero_r)
+        # 分别计算左腿和右腿的奖励
+        penalty = reward_left.float() * 0.5 + reward_right.float() * 0.5
+        return penalty

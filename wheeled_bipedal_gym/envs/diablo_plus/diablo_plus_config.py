@@ -74,7 +74,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
         num_rows = 20  # number of terrain rows (levels)
         num_cols = 20  # number of terrain cols (types)
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete]
-        terrain_proportions = [0.1, 0.1, 0.35, 0.25, 0.2]
+        terrain_proportions = [0.0, 0.0, 0.0, 1.0, 0.0, 0]
         # trimesh only:
         slope_treshold = (
             0.75  # slopes above this threshold will be corrected to vertical surfaces
@@ -191,7 +191,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
             tracking_ang_vel = 5.0
 
             base_height = 5.0
-            base_height_enhance = 1
+            # base_height_enhance = 1
             nominal_state = -10.0
             lin_vel_z = -2.0
             ang_vel_xy = -0.0

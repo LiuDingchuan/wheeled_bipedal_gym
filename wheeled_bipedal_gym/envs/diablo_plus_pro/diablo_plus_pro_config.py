@@ -3,7 +3,7 @@ Description:
 Version: 2.0
 Author: Dandelion
 Date: 2025-02-25 21:17:59
-LastEditTime: 2025-03-04 16:20:55
+LastEditTime: 2025-03-10 15:48:02
 FilePath: /wheeled_bipedal_gym/wheeled_bipedal_gym/envs/diablo_plus_pro/diablo_plus_pro_config.py
 '''
 # SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
@@ -40,6 +40,7 @@ from wheeled_bipedal_gym.envs.base.wheeled_bipedal_config import (
     WheeledBipedalCfg,
     WheeledBipedalCfgPPO,
 )
+import math
 
 
 class DiabloPlusProCfg(WheeledBipedalCfg):
@@ -79,23 +80,24 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
         )
 
     class commands(WheeledBipedalCfg.commands):
-        curriculum = True
+        curriculum = False
         basic_max_curriculum = 2.5
         advanced_max_curriculum = 1.5
         curriculum_threshold = 0.7 #机器人在达到一定的性能水平后，会逐渐面临更高难度的任务，从而实现课程学习的目标。
         num_commands = 3  # default: lin_vel_x, lin_vel_y, ang_vel_yaw, heading (in heading mode ang_vel_yaw is recomputed from heading error)
         resampling_time = 5.0  # time before command are changed[s]
-        heading_command = False  # if true: compute ang vel command from heading error
+        heading_command = True  # if true: compute ang vel command from heading error
 
         class ranges(WheeledBipedalCfg.commands.ranges):
             lin_vel_x = [-1.2, 1.2]  # min max [m/s]
             ang_vel_yaw = [-0.5, 0.5]  # min max [rad/s]
-            height = [0.18, 0.32]
-            heading = [-0.2, 0.2]
+            height = [0.30, 0.35]
+            heading = [-0.5, 0.5]
 
     # 定义机器人的初始离地位姿 & 初始线速度角速度和default_joint_angles
     class init_state(WheeledBipedalCfg.init_state):
-        pos = [0.0, 0.0, 0.17]  # x,y,z [m]
+        # pos = [0.0, 0.0, 0.17]  # x,y,z [m] #匍匐的时候
+        pos = [0.0, 0.0, 0.35]  # x,y,z [m] #默认是站立的
         rot = [0.0, 0.0, 0, 1.0]  # x,y,z,w [quat]
         default_joint_angles = {  # target angles when action = 0.0
             "left_hip_joint": 0.0,
@@ -111,14 +113,14 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
         control_type = "P"  # P: position, V: velocity, T: torques 
         # PD Drive parameters:
         stiffness = {
-            "hip": 50.0,
+            "hip": 40.0,
             "knee": 40.0,
             "wheel": 0,
         }  # [N*m/rad]
         damping = {
-            "hip": 1.5,
+            "hip": 1.0,
             "knee": 1.0,
-            "wheel": 0.8,
+            "wheel": 1.0,
         }  # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.5 #通过缩放，可以确保策略网络输出的动作在合理范围内
@@ -126,15 +128,17 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
         vel_action_scale = 8.0
 
         # decimation: Number of control action updates @ sim DT per policy DT
-        decimation = 2  # 它表示每个仿真间隔dt内policy的更新次数，它和sim里面的dt联合决定了这个控制模型的频率。为dt*decimation
+        decimation = 4  # 它表示每个仿真间隔dt内policy的更新次数，它和sim里面的dt联合决定了这个控制模型的频率。为dt*decimation
         feedforward_force = 60.0
 
     # 定义机器人模型内容，例如URDF和一些上下限
     class asset(WheeledBipedalCfg.asset):
-        file = "{WHEELED_BIPEDAL_GYM_ROOT_DIR}/resources/robots/diablo_plus_pro/urdf/diablo_plus_pro.urdf"
+        file = "{WHEELED_BIPEDAL_GYM_ROOT_DIR}/resources/robots/diablo_pluspro_stand/urdf/diablo_pluspro_stand.urdf"
         name = "diablo_plus_pro"
         foot_name = "wheel"
         foot_radius = 0.16
+        hip_link_init_angle = math.pi - 0.930609557
+        knee_link_init_angle = -math.pi + 1.761037215
         offset = 0.0
         l1 = 0.2
         l2 = 0.2
@@ -181,24 +185,24 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
     class rewards(WheeledBipedalCfg.rewards):
 
         class scales(WheeledBipedalCfg.rewards.scales):
-            tracking_lin_vel = 10.0
+            tracking_lin_vel = 20.0
             tracking_lin_vel_enhance = 10
             tracking_ang_vel = 5.0
 
-            base_height = -20.0
-            base_height_enhance = 0 #off
-            nominal_state = -2.0
-            wheel_adjustment = 1.0
+            base_height = -1.0
+            # base_height_enhance = 0 #off
+            nominal_state = -0.1
+            # wheel_adjustment = 1.0
             # lin_vel_z = -2.0
             ang_vel_xy = -0.0
-            orientation = -10.0 # 很重要，不加的话会导致存活时间下降（FROM 逐迹）
+            orientation = -1.0 # 很重要，不加的话会导致存活时间下降（FROM 逐迹）
 
             dof_vel = -5e-5
             dof_acc = -2.5e-7
             torques = -1e-5
             torque_limits = -0.1
-            action_rate = -0.05
-            action_smooth = -0.03
+            action_rate = -0.01
+            action_smooth = -0.01
 
             collision = -100.0
             dof_pos_limits = -2.0
@@ -206,19 +210,23 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
             # stand_still = -1.0
 
             theta_limit = -0.01
-            same_l = 1e-6
-            # wheel_vel = -0.5
-            no_fly = 1.0
-            theta0_in_range = 1.0
+            same_l = 0.0
+            wheel_vel = 0.0
+            no_fly = 0.0
+            # theta0_in_range = 1.0
             survival = 10.0
+            termination = -100.0
+            stumble = -5
+            stand_still = -1.0
+            no_stagnation = 5.0
 
         only_positive_rewards = False  # if true negative total rewards are clipped at zero (avoids early termination problems)
         clip_single_reward = 1
-        tracking_sigma = 0.2  # tracking reward = exp(-error^2/sigma) #这个值越小跟踪效果反而越好，因为这样只有当速度非常接近v_set的时候奖励才会最大
-        soft_dof_pos_limit = 0.95  # percentage of urdf limits, values above this limit are penalized       
-        soft_dof_vel_limit = 0.9
-        soft_torque_limit = 0.9
-        base_height_target = 0.2 # [m]
+        tracking_sigma = 0.25  # tracking reward = exp(-error^2/sigma) #这个值越小跟踪效果反而越好，因为这样只有当速度非常接近v_set的时候奖励才会最大
+        soft_dof_pos_limit = 1.0 # percentage of urdf limits, values above this limit are penalized       
+        soft_dof_vel_limit = 1.0
+        soft_torque_limit = 1.0
+        base_height_target = 0.25 # [m]
         max_contact_force = 100.0  # forces above this value are penalized
 
     class normalization(WheeledBipedalCfg.normalization):

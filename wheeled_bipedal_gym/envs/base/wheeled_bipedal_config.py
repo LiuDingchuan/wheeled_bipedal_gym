@@ -138,6 +138,8 @@ class WheeledBipedalCfg(BaseConfig):
         offset = 0.0
         l1 = 0.0
         l2 = 0.0
+        hip_link_init_angle = 0.0
+        knee_link_init_angle = 0.0
         penalize_contacts_on = []  # 碰到地面会受到惩罚的link的名字
         terminate_after_contacts_on = (
             []
