@@ -47,10 +47,8 @@ class WheeledBipedalCfg(BaseConfig):
         send_timeouts = True  # send time out information to the algorithm 决定是否将超时信息发送给算法
         episode_length_s = 20  # episode length in seconds 表示一个 episode（情节，即智能体从开始到结束的一个完整交互过程）的长度，单位为秒
         dof_vel_use_pos_diff = True  # 是一个布尔值，用于决定是否通过位置差异来计算自由度（Degree of Freedom，DOF）的速度。
-        fail_to_terminal_time_s = (
-            1  # 表示在出现失败情况后到将环境标记为终止状态所等待的时间，单位为秒
-        )
-
+        fail_to_terminal_time_s = 0.1  # 表示在出现失败情况后到将环境标记为终止状态所等待的时间，单位为秒
+        
     class terrain:
         mesh_type = "plane"
         # mesh_type = "trimesh"  # "heightfield" # none, plane, heightfield or trimesh

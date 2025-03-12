@@ -3,7 +3,7 @@ Description:
 Version: 2.0
 Author: Dandelion
 Date: 2025-02-25 21:17:45
-LastEditTime: 2025-03-10 15:50:57
+LastEditTime: 2025-03-11 15:17:51
 FilePath: /wheeled_bipedal_gym/wheeled_bipedal_gym/envs/diablo_plus_pro/diablo_plus_pro.py
 '''
 # SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
@@ -1725,22 +1725,22 @@ class DiabloPlusPro(BaseTask):
         # return torch.sum(torch.square(self.projected_gravity[:, :2]), dim=1)
         return torch.norm(self.projected_gravity[:, :2], dim=1) > 0.1
 
-    # def _reward_base_height(self):
-    #     # Penalize base height away from target
-    #     # print(self.commands[0, 2], self.base_height[0])
-    #     if self.reward_scales["base_height"] < 0:
-    #         return torch.abs(self.base_height - self.commands[:, 2])
-    #     else:
-    #         base_height_error = torch.square(self.base_height - self.commands[:, 2])
-    #         return torch.exp(-base_height_error / 0.001)
     def _reward_base_height(self):
         # Penalize base height away from target
-        base_height = torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights, dim=1)
-        return torch.square(base_height - self.commands[:, 2])
+        # print(self.commands[0, 2], self.base_height[0])
+        if self.reward_scales["base_height"] < 0:
+            return torch.abs(self.base_height - self.commands[:, 2])
+        else:
+            base_height_error = torch.square(self.base_height - self.commands[:, 2])
+            return torch.exp(-base_height_error / 0.001)
+    # def _reward_base_height(self):
+    #     # Penalize base height away from target
+    #     base_height = torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights, dim=1)
+    #     return torch.square(base_height - self.commands[:, 2])
 
-    # def _reward_base_height_enhance(self):
-    #     base_height_error = torch.square(self.base_height - self.commands[:, 2])
-    #     return torch.exp(-base_height_error / 0.001 / 10) - 1
+    def _reward_base_height_enhance(self):
+        base_height_error = torch.square(self.base_height - self.commands[:, 2])
+        return torch.exp(-base_height_error / 0.001 / 10) - 1
 
     def _reward_torques(self):
         # Penalize torques
@@ -2013,16 +2013,16 @@ class DiabloPlusPro(BaseTask):
         # 定义阈值
         theta0_threshold = 0.25
         # 定义关节速度的容差范围
-        vel_tolerance = 0.1
+        vel_tolerance = 0.02
         # 检查 theta0 是否超过阈值
         theta0_exceed_left = torch.abs(self.theta0[:, 0]) > theta0_threshold
         theta0_exceed_right = torch.abs(self.theta0[:, 1]) > theta0_threshold
         # 检查各关节速度是否在容差范围内
-        joint_vel_near_zero_l = torch.all(torch.abs(self.dof_vel[:, [0,3]]) < vel_tolerance, dim=1)
-        joint_vel_near_zero_r = torch.all(torch.abs(self.dof_vel[:, [0,3]]) < vel_tolerance, dim=1)
+        joint_vel_near_zero_l = torch.all(torch.abs(self.dof_vel[:, [0, 1, 2]]) < vel_tolerance, dim=1)
+        joint_vel_near_zero_r = torch.all(torch.abs(self.dof_vel[:, [3, 4, 5]]) < vel_tolerance, dim=1)
         # 如果左腿或右腿的 theta0 超过阈值且关节速度接近零，则给予惩罚
         reward_left = ~(theta0_exceed_left & joint_vel_near_zero_l)
         reward_right = ~(theta0_exceed_right & joint_vel_near_zero_r)
         # 分别计算左腿和右腿的奖励
-        penalty = reward_left.float() * 0.5 + reward_right.float() * 0.5
-        return penalty
+        reward_sum = reward_left.float() * 0.5 + reward_right.float() * 0.5
+        return reward_sum

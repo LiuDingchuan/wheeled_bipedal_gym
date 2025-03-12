@@ -3,7 +3,7 @@ Description:
 Version: 2.0
 Author: Dandelion
 Date: 2025-02-25 21:17:59
-LastEditTime: 2025-03-10 15:48:02
+LastEditTime: 2025-03-11 22:04:26
 FilePath: /wheeled_bipedal_gym/wheeled_bipedal_gym/envs/diablo_plus_pro/diablo_plus_pro_config.py
 '''
 # SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
@@ -91,7 +91,7 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
         class ranges(WheeledBipedalCfg.commands.ranges):
             lin_vel_x = [-1.2, 1.2]  # min max [m/s]
             ang_vel_yaw = [-0.5, 0.5]  # min max [rad/s]
-            height = [0.30, 0.35]
+            height = [0.20, 0.35]
             heading = [-0.5, 0.5]
 
     # 定义机器人的初始离地位姿 & 初始线速度角速度和default_joint_angles
@@ -100,11 +100,11 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
         pos = [0.0, 0.0, 0.35]  # x,y,z [m] #默认是站立的
         rot = [0.0, 0.0, 0, 1.0]  # x,y,z,w [quat]
         default_joint_angles = {  # target angles when action = 0.0
-            "left_hip_joint": 0.0,
-            "left_knee_joint": 0.0,
+            "left_hip_joint": 0.184481302,
+            "left_knee_joint": 1.194677873,
             "left_wheel_joint": 0.0,
-            "right_hip_joint": 0.0,
-            "right_knee_joint": 0.0,
+            "right_hip_joint": 0.184481302,
+            "right_knee_joint": 1.194677873,
             "right_wheel_joint": 0.0,
         }  # 这个要和urdf内部的joint对应，并且其顺序决定了joint的顺序
 
@@ -133,7 +133,7 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
 
     # 定义机器人模型内容，例如URDF和一些上下限
     class asset(WheeledBipedalCfg.asset):
-        file = "{WHEELED_BIPEDAL_GYM_ROOT_DIR}/resources/robots/diablo_pluspro_stand/urdf/diablo_pluspro_stand.urdf"
+        file = "{WHEELED_BIPEDAL_GYM_ROOT_DIR}/resources/robots/diablo_plus_pro/urdf/diablo_plus_pro.urdf"
         name = "diablo_plus_pro"
         foot_name = "wheel"
         foot_radius = 0.16
@@ -186,14 +186,14 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
 
         class scales(WheeledBipedalCfg.rewards.scales):
             tracking_lin_vel = 20.0
-            tracking_lin_vel_enhance = 10
+            tracking_lin_vel_enhance = 1
             tracking_ang_vel = 5.0
 
-            base_height = -1.0
-            # base_height_enhance = 0 #off
-            nominal_state = -0.1
+            base_height = 5.0
+            base_height_enhance = 1.0 #off
+            nominal_state = -0.5
             # wheel_adjustment = 1.0
-            # lin_vel_z = -2.0
+            lin_vel_z = 0.0 #off
             ang_vel_xy = -0.0
             orientation = -1.0 # 很重要，不加的话会导致存活时间下降（FROM 逐迹）
 
@@ -205,8 +205,8 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
             action_smooth = -0.01
 
             collision = -100.0
-            dof_pos_limits = -2.0
-            dof_vel_limits = 0.0
+            dof_pos_limits = -0.1
+            dof_vel_limits = -0.1
             # stand_still = -1.0
 
             theta_limit = -0.01
@@ -214,11 +214,11 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
             wheel_vel = 0.0
             no_fly = 0.0
             # theta0_in_range = 1.0
-            survival = 10.0
+            survival = 0.0
             termination = -100.0
             stumble = -5
-            stand_still = -1.0
-            no_stagnation = 5.0
+            stand_still = 0.0
+            no_stagnation = 0.0
 
         only_positive_rewards = False  # if true negative total rewards are clipped at zero (avoids early termination problems)
         clip_single_reward = 1
