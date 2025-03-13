@@ -152,15 +152,15 @@ class DiabloPlus(BaseTask):
         # change from original for the joint tf is different！
         self.theta1 = torch.cat(
             (
-                self.dof_pos[:, 0].unsqueeze(1)  + self.pi - 0.722392,
-                self.dof_pos[:, 3].unsqueeze(1)  + self.pi - 0.722392,
+                self.dof_pos[:, 0].unsqueeze(1)  + self.cfg.asset.hip_link_init_angle,
+                self.dof_pos[:, 3].unsqueeze(1)  + self.cfg.asset.hip_link_init_angle,
             ),
             dim=1,
         )
         self.theta2 = torch.cat(
             (
-                (self.dof_pos[:, 1].unsqueeze(1) - self.pi + 1.311441),
-                (self.dof_pos[:, 4].unsqueeze(1) - self.pi + 1.311441),
+                (self.dof_pos[:, 1].unsqueeze(1) + self.cfg.asset.knee_link_init_angle) - self.theta1[:, 0].unsqueeze(1),
+                (self.dof_pos[:, 4].unsqueeze(1) + self.cfg.asset.knee_link_init_angle) - self.theta1[:, 1].unsqueeze(1),
             ),
             dim=1,
         )
@@ -1899,7 +1899,7 @@ class DiabloPlus(BaseTask):
 
     def _reward_wheel_vel(self):
         # Penalize dof velocities
-        R = 0.085
+        R = self.cfg.asset.foot_radius
         left_wheel_v_set = self.commands[:, 0] - self.commands[:, 1]
         right_wheel_v_set = self.commands[:, 0] + self.commands[:, 1]
         return torch.sum(

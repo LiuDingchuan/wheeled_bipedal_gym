@@ -32,7 +32,7 @@ from wheeled_bipedal_gym.envs.base.wheeled_bipedal_config import (
     WheeledBipedalCfg,
     WheeledBipedalCfgPPO,
 )
-
+import math
 
 class DiabloPlusCfg(WheeledBipedalCfg):
     class env(WheeledBipedalCfg.env):
@@ -97,7 +97,7 @@ class DiabloPlusCfg(WheeledBipedalCfg):
 
     # 定义机器人的初始离地位姿 & 初始线速度角速度和default_joint_angles
     class init_state(WheeledBipedalCfg.init_state):
-        pos = [0.0, 0.0, 0.25]  # x,y,z [m]
+        pos = [0.0, 0.0, 0.35]  # x,y,z [m]
         rot = [0.0, 0.0, 0, 1.0]  # x,y,z,w [quat]
         default_joint_angles = {  # target angles when action = 0.0
             "left_hip_joint": 0.0,
@@ -138,9 +138,14 @@ class DiabloPlusCfg(WheeledBipedalCfg):
 
     # 定义机器人模型内容，例如URDF和一些上下限
     class asset(WheeledBipedalCfg.asset):
-        file = "{WHEELED_BIPEDAL_GYM_ROOT_DIR}/resources/robots/diablo_plus/urdf/diablo_plus.urdf"
+        file = "{WHEELED_BIPEDAL_GYM_ROOT_DIR}/resources/robots/diablo_pluspro_stand/urdf/diablo_pluspro_stand.urdf"
         name = "diablo_plus"
         foot_name = "wheel"
+        foot_radius = 0.16
+        # hip_link_init_angle =  math.pi - 0.722392
+        # knee_link_init_angle = -math.pi + 1.444784
+        hip_link_init_angle = math.pi - 0.930609557
+        knee_link_init_angle = -math.pi + 1.761037215
         offset = 0.0
         l1 = 0.2
         l2 = 0.2
@@ -153,7 +158,8 @@ class DiabloPlusCfg(WheeledBipedalCfg):
             "base_link",
         ]  # 碰到地面会收到惩罚的name of Link
         terminate_after_contacts_on = [
-            "base_link"
+            "base_link",
+            "hip"
         ]  # 碰到地面达到一定条件（接触力&时间）后会直接提前结束当前轮的envs
 
     # 通过增加各种随机值来增加机器人的鲁棒性，
@@ -186,13 +192,13 @@ class DiabloPlusCfg(WheeledBipedalCfg):
     class rewards(WheeledBipedalCfg.rewards):
 
         class scales(WheeledBipedalCfg.rewards.scales):
-            tracking_lin_vel = 10.0
-            tracking_lin_vel_enhance = 1
+            tracking_lin_vel = 20.0
+            tracking_lin_vel_enhance = 10
             tracking_ang_vel = 5.0
 
             base_height = 5.0
             # base_height_enhance = 1
-            nominal_state = -10.0
+            nominal_state = -0.5
             lin_vel_z = -2.0
             ang_vel_xy = -0.0
             orientation = -5.0
@@ -210,7 +216,8 @@ class DiabloPlusCfg(WheeledBipedalCfg):
             theta_limit = -0.01
             same_l = 0.1e-5
             wheel_vel = -0.5
-            # no_fly = 0.5
+            no_fly = 0.0
+            stumble = -0.5
 
         only_positive_rewards = False  # if true negative total rewards are clipped at zero (avoids early termination problems)
         clip_single_reward = 1
@@ -255,3 +262,4 @@ class DiabloPlusCfgPPO(WheeledBipedalCfgPPO):
     class runner(WheeledBipedalCfgPPO.runner):
         # logging
         experiment_name = "diablo_plus"
+        max_iterations = 10000
