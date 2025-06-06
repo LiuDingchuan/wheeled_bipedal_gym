@@ -3,7 +3,7 @@ Description:
 Version: 2.0
 Author: Dandelion
 Date: 2025-02-25 21:17:59
-LastEditTime: 2025-03-13 01:21:39
+LastEditTime: 2025-03-13 22:20:42
 FilePath: /wheeled_bipedal_gym/wheeled_bipedal_gym/envs/diablo_plus_pro/diablo_plus_pro_config.py
 '''
 # SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
@@ -73,8 +73,8 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
         num_rows = 20  # number of terrain rows (levels)
         num_cols = 20  # number of terrain cols (types)
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete]
-        # terrain_proportions = [0.0, 0.1, 0.2, 0.35, 0.2, 0.15]#分别对应上面地形的比例
-        terrain_proportions = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0]#分别对应上面地形的比例
+        terrain_proportions = [0.0, 0.1, 0.2, 0.35, 0.2, 0.15]#分别对应上面地形的比例
+        # terrain_proportions = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0]#分别对应上面地形的比例
         # trimesh only:
         slope_treshold = (
             0.75  # slopes above this threshold will be corrected to vertical surfaces
@@ -90,7 +90,7 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
         heading_command = False  # if true: compute ang vel command from heading error
 
         class ranges(WheeledBipedalCfg.commands.ranges):
-            lin_vel_x = [0.5, 1.2]  # min max [m/s]
+            lin_vel_x = [-1.2, 1.2]  # min max [m/s]
             ang_vel_yaw = [-0.5, 0.5]  # min max [rad/s]
             height = [0.18, 0.35]
             heading = [-0.2, 0.2]
@@ -191,8 +191,8 @@ class DiabloPlusProCfg(WheeledBipedalCfg):
             tracking_ang_vel = 5.0
 
             base_height = 5.0
-            base_height_enhance = 0.5 #off
-            nominal_state = -0.01
+            base_height_enhance = 0.0 #off
+            nominal_state = -0.5
             # wheel_adjustment = 1.0
             lin_vel_z = 0.0 #off
             ang_vel_xy = -0.0

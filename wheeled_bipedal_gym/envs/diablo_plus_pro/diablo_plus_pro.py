@@ -3,7 +3,7 @@ Description:
 Version: 2.0
 Author: Dandelion
 Date: 2025-02-25 21:17:45
-LastEditTime: 2025-03-11 15:17:51
+LastEditTime: 2025-03-13 20:47:53
 FilePath: /wheeled_bipedal_gym/wheeled_bipedal_gym/envs/diablo_plus_pro/diablo_plus_pro.py
 '''
 # SPDX-FileCopyrightText: Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
@@ -263,11 +263,7 @@ class DiabloPlusPro(BaseTask):
     # 检查是否结束当前envs
     def check_termination(self):
         """Check if environments need to be reset"""
-        fail_buf = torch.any(
-            torch.norm(
-                self.contact_forces[:, self.termination_contact_indices, :], dim=-1
-            )
-            > 1.0,
+        fail_buf = torch.any(torch.norm(self.contact_forces[:, self.termination_contact_indices, :], dim=-1)> 1.0,
             dim=1,
         )
         fail_buf |= self.projected_gravity[:, 2] > -0.8
@@ -418,12 +414,13 @@ class DiabloPlusPro(BaseTask):
         if self.cfg.env.num_privileged_obs is not None:
             heights = (
                 torch.clip(
-                    self.root_states[:, 2].unsqueeze(1) - self.measured_heights,
+                    self.root_states[:, 2].unsqueeze(1) - 0.4 - self.measured_heights,
                     -1,
                     1.0,
                 )
                 * self.obs_scales.height_measurements
             )
+            # print("heights shape: ", heights)
             self.privileged_obs_buf = torch.cat(
                 (
                     self.base_lin_vel * self.obs_scales.lin_vel,
@@ -1911,7 +1908,8 @@ class DiabloPlusPro(BaseTask):
     def _reward_same_l(self):
         # Penalize l is too dif
         return torch.square(self.L0[:, 0] - self.L0[:, 1])
-
+    
+    #惩罚轮速和设定速度差距过大
     def _reward_wheel_vel(self):
         # Penalize dof velocities
         R = self.cfg.asset.foot_radius
